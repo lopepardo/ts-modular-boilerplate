@@ -1,0 +1,25 @@
+info:
+  name: Create expense
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{baseUrl}}/expenses"
+  body:
+    type: json
+    data: |-
+      {
+        "amountCents": 1250,
+        "description": "Set lunch",
+        "category": "food",
+        "date": "2026-10-20"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

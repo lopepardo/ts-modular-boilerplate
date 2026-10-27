@@ -1,0 +1,20 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/db/generated"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Expense {
+  id          String   @id @default(uuid())
+  amountCents Int
+  description String
+  category    String
+  date        DateTime @db.Date
+  createdAt   DateTime @default(now())
+
+  @@index([date])
+  @@index([category])
+}
