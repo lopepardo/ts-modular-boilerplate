@@ -35,3 +35,7 @@ Responses: `200` expense · `422` id is not a uuid · `404` `EXPENSE_NOT_FOUND`.
 ### `DELETE /expenses/:id`
 
 Responses: `204` no body · `422` id is not a uuid · `404` `EXPENSE_NOT_FOUND`.
+
+### `GET /health`
+
+Responses: `200` `{ "status": "ok" }`.

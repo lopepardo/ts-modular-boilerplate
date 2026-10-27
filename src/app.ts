@@ -12,6 +12,8 @@ export const buildApp = async () => {
     origin: "*",
   });
 
+  app.get("/health", async (_request, _reply) => ({ status: "ok" }));
+
   app.register(expensesRoutes, { prefix: "/expenses" });
 
   return app;
