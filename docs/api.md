@@ -28,6 +28,25 @@ Responses: `201` with the expense · `422` invalid data.
 Optional query: `from`, `to` (both inclusive), `category`.
 Responses: `200` array of expenses, by date descending · `422` invalid filters.
 
+### `GET /expenses/summary`
+
+Required query: `month` (`YYYY-MM`). Totals per category for that month.
+
+```json
+{
+  "month": "2026-10",
+  "totalCents": 5530,
+  "count": 4,
+  "categories": [
+    { "category": "food", "totalCents": 3030, "count": 2 },
+    { "category": "transport", "totalCents": 2500, "count": 2 }
+  ]
+}
+```
+
+Categories are ordered by `totalCents` descending, then by name. A month without expenses returns `200` with `totalCents: 0`, `count: 0` and `categories: []`. Categories are free text, so `Food` and `food` are different groups.
+Responses: `200` summary · `422` missing or malformed `month`.
+
 ### `GET /expenses/:id`
 
 Responses: `200` expense · `422` id is not a uuid · `404` `EXPENSE_NOT_FOUND`.

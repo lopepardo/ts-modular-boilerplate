@@ -31,6 +31,42 @@ export const listExpenses = ({ from, to, category }: ExpenseFilters) =>
     orderBy: [{ date: "desc" }, { createdAt: "desc" }],
   });
 
+export type MonthlySummary = {
+  totalCents: number;
+  count: number;
+  categories: { category: string; totalCents: number; count: number }[];
+};
+
+export const getMonthlySummary = async ({
+  from,
+  to,
+}: {
+  from: Date;
+  to: Date;
+}): Promise<MonthlySummary> => {
+  const groups = await prisma.expense.groupBy({
+    by: ["category"],
+    where: { date: { gte: from, lt: to } },
+    _sum: { amountCents: true },
+    _count: { _all: true },
+  });
+  const categories = groups
+    .map((group) => ({
+      category: group.category,
+      totalCents: group._sum.amountCents ?? 0,
+      count: group._count._all,
+    }))
+    .sort(
+      (a, b) =>
+        b.totalCents - a.totalCents || a.category.localeCompare(b.category),
+    );
+  return {
+    totalCents: categories.reduce((sum, c) => sum + c.totalCents, 0),
+    count: categories.reduce((sum, c) => sum + c.count, 0),
+    categories,
+  };
+};
+
 export const getExpense = async (id: string) => {
   const expense = await prisma.expense.findUnique({ where: { id } });
   if (!expense) {

@@ -6,6 +6,7 @@ const prismaMock = vi.hoisted(() => ({
     findMany: vi.fn(),
     findUnique: vi.fn(),
     deleteMany: vi.fn(),
+    groupBy: vi.fn(),
   },
 }));
 
@@ -127,6 +128,108 @@ describe("expenses", () => {
       });
 
       expect(res.statusCode).toBe(422);
+    });
+  });
+
+  describe("GET /expenses/summary", () => {
+    it("returns zero totals and no categories for a month without expenses", async () => {
+      prismaMock.expense.groupBy.mockResolvedValue([]);
+
+      const res = await app.inject({
+        method: "GET",
+        url: "/expenses/summary?month=2026-09",
+      });
+
+      expect(res.statusCode).toBe(200);
+      expect(res.json()).toEqual({
+        month: "2026-09",
+        totalCents: 0,
+        count: 0,
+        categories: [],
+      });
+      expect(prismaMock.expense.groupBy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            date: {
+              gte: new Date("2026-09-01T00:00:00.000Z"),
+              lt: new Date("2026-10-01T00:00:00.000Z"),
+            },
+          },
+        }),
+      );
+    });
+
+    it("sums in integer cents and sorts by total desc, then category", async () => {
+      prismaMock.expense.groupBy.mockResolvedValue([
+        {
+          category: "transport",
+          _sum: { amountCents: 1250 },
+          _count: { _all: 1 },
+        },
+        { category: "food", _sum: { amountCents: 3030 }, _count: { _all: 2 } },
+        { category: "bills", _sum: { amountCents: 1250 }, _count: { _all: 1 } },
+      ]);
+
+      const res = await app.inject({
+        method: "GET",
+        url: "/expenses/summary?month=2026-10",
+      });
+
+      expect(res.statusCode).toBe(200);
+      expect(res.json()).toEqual({
+        month: "2026-10",
+        totalCents: 5530,
+        count: 4,
+        categories: [
+          { category: "food", totalCents: 3030, count: 2 },
+          { category: "bills", totalCents: 1250, count: 1 },
+          { category: "transport", totalCents: 1250, count: 1 },
+        ],
+      });
+    });
+
+    it("uses January of the next year as the upper bound for December", async () => {
+      prismaMock.expense.groupBy.mockResolvedValue([]);
+
+      await app.inject({
+        method: "GET",
+        url: "/expenses/summary?month=2026-12",
+      });
+
+      expect(prismaMock.expense.groupBy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            date: {
+              gte: new Date("2026-12-01T00:00:00.000Z"),
+              lt: new Date("2027-01-01T00:00:00.000Z"),
+            },
+          },
+        }),
+      );
+    });
+
+    it.each(["", "?month=2026-13", "?month=2026-1", "?month=2026-10-01"])(
+      "rejects invalid month %j with 422",
+      async (query) => {
+        const res = await app.inject({
+          method: "GET",
+          url: `/expenses/summary${query}`,
+        });
+
+        expect(res.statusCode).toBe(422);
+        expect(prismaMock.expense.groupBy).not.toHaveBeenCalled();
+      },
+    );
+
+    it("never produces an uncategorised group: creating without category is rejected", async () => {
+      const res = await app.inject({
+        method: "POST",
+        url: "/expenses",
+        payload: { amountCents: 500, description: "x", date: "2026-10-20" },
+      });
+
+      expect(res.statusCode).toBe(422);
+      expect(prismaMock.expense.create).not.toHaveBeenCalled();
     });
   });
 

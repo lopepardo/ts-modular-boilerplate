@@ -4,6 +4,7 @@ import {
   createExpense as createExpenseService,
   deleteExpense as deleteExpenseService,
   getExpense as getExpenseService,
+  getMonthlySummary as getMonthlySummaryService,
   listExpenses as listExpensesService,
 } from "../services/expenses.js";
 
@@ -50,6 +51,21 @@ export const listExpenses = async (request: FastifyRequest) => {
     ...(filters.category && { category: filters.category }),
   });
   return expenses.map(present);
+};
+
+const SummaryQuerySchema = z
+  .object({ month: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/) })
+  .transform(({ month }) => {
+    const from = new Date(`${month}-01T00:00:00.000Z`);
+    const to = new Date(from);
+    to.setUTCMonth(to.getUTCMonth() + 1);
+    return { month, from, to };
+  });
+export const getSummary = async (request: FastifyRequest) => {
+  const { month, from, to } = SummaryQuerySchema.parse(request.query);
+  request.log.info({ month, from, to }, "Getting summary for month");
+  const summary = await getMonthlySummaryService({ from, to });
+  return { month, ...summary };
 };
 
 export const getExpense = async (request: FastifyRequest) => {
