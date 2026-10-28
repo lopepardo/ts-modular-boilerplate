@@ -5,7 +5,7 @@ info:
 
 http:
   method: GET
-  url: "{{baseUrl}}/expenses/summary"
+  url: "{{baseUrl}}/expenses/summary?month=2026-10"
   params:
     - name: month
       value: 2026-10
