@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "deny": ["Read(./.env)", "Read(./.env.*)", "Read(!./.env.example)"],
+    "allow": ["Bash(pnpm format *)", "Bash(pnpm db:generate)"]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/format.sh\"",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}
