@@ -29,14 +29,11 @@ docker-compose.yml   Postgres local
 ## ¿Por qué existe cada parte?
 
 - **routes → controllers → services:** cada capa tiene una sola responsabilidad. Rutas = cableado; controllers = frontera HTTP (validar entrada, formatear salida); services = reglas y datos, sin conocer Fastify.
-- **`present()` (controllers):** la salida pública difiere de la fila de BD (fecha → `YYYY-MM-DD`, `createdAt` → ISO). Las fechas de entrada se parsean a `Date` UTC medianoche.
 - **`AppError` + `errorHandler`:** un solo lugar decide el formato de error `{ error: { code, message, traceId } }`. `ZodError` → 422 `VALIDATION_ERROR` (con `details`), `AppError` → su `statusCode`/`code`, resto → 500. Por eso los handlers solo hacen `.parse()` y lanzan; no capturan errores.
 - **`buildApp()` separado de `main.ts`:** permite tests con `app.inject` sin abrir puerto.
 - **`config/env.ts`:** falla rápido (`process.exit(1)`) si el entorno es inválido; el resto del código importa `env`, nunca `process.env`.
-- **`prisma.config.ts` lee `DB_*` por su cuenta:** el CLI de Prisma no pasa por `env.ts`, así que construye su propia URL.
-- **`db/client.ts`:** única instancia de `PrismaClient` (adapter `pg`, pool configurado desde `env`). El cliente se importa de `./generated/client.js`, **no** de `@prisma/client`.
-- **Importes en céntimos (enteros):** evita errores de coma flotante.
 - **`docs/api.md`:** contrato público; cliente y código deben coincidir con él.
+- **Reglas por capa:** el detalle de services, tests y Prisma vive en `.claude/rules/` y se carga al tocar esos archivos. Convenciones REST completas: skill `convenciones-api`.
 
 ## ¿Cómo se trabaja?
 
@@ -62,21 +59,12 @@ pnpm db:migrate
 
 ### Verificación (antes de dar algo por terminado)
 
-`pnpm typecheck && pnpm lint && pnpm test`. Si cambiaste el comportamiento de un endpoint, comprueba también `docs/api.md`.
-
-### Tests
-
-Los tests **no usan BD**: mockean `../src/db/client.js` con `vi.mock` + `vi.hoisted` y ejercitan las rutas con `app.inject` tras `await import("../src/app.js")`. Cualquier test nuevo que toque datos sigue ese patrón (ver `tests/expenses.test.ts`).
+`pnpm typecheck && pnpm lint && pnpm test`. Si cambiaste un endpoint, actualiza `docs/api.md`.
 
 ### Reglas del proyecto
 
-- Importes en céntimos (enteros), nunca float.
 - Imports relativos con extensión `.js` (ESM); `import type` para tipos (`verbatimModuleSyntax`).
-- No edites migraciones ya aplicadas: crea una nueva.
-- Si cambias la API (rutas, campos, códigos de error), actualiza `docs/api.md`.
-- Errores de negocio: `throw new AppError(mensaje, status, "CODIGO_EN_MAYUSCULAS")` en el service; nunca `try/catch` en controllers para formatear respuestas.
-- Nuevo recurso: un archivo por capa (`routes/`, `controllers/`, `services/`) y registro con `prefix` en `app.ts`.
-- TypeScript estricto: sin `any`, `type` en vez de `interface`, args no usados con prefijo `_`. `exactOptionalPropertyTypes` está activo: no pases `undefined` explícito a props opcionales (usa spread condicional, como en `listExpenses`).
+- TypeScript estricto: sin `any`, `type` en vez de `interface`, args no usados con prefijo `_`. `exactOptionalPropertyTypes` activo: sin `undefined` explícito en props opcionales (spread condicional).
 - Prettier: comillas dobles, `;`, coma final, 80 columnas.
 - Ramas `feat/…` y `fix/…`; commits con Conventional Commits.
 - `.env` está gitignored: nunca lo commitees; documenta variables nuevas en `.env.example` y `config/env.ts`.
