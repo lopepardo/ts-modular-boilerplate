@@ -5,5 +5,5 @@ paths:
 
 # Services
 
-- Importa `prisma` de `../db/client.js`; nunca crees otro `PrismaClient`.
-- Para endpoints, errores y capas, sigue la skill `convenciones-api`.
+- Import `prisma` from `../db/client.js`; never create another `PrismaClient`.
+- For endpoints, errors and layers, follow the `api-conventions` skill.

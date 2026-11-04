@@ -1,70 +1,81 @@
-# Gastos API
+# Expenses API
 
-API REST de gastos personales. Dominio y mensajes de error en **inglés** (`expenses`, `amountCents`, `category`…); mantenlo así. Hoy solo existe el recurso `expenses` (+ `GET /health`).
+Personal expenses REST API. Domain and error messages in **English** (`expenses`, `amountCents`, `category`…); keep it that way. Today only the `expenses` resource exists (+ `GET /health`).
 
-**Stack:** Node + TypeScript ESM (`nodenext`, `strict`), Fastify 5, Prisma 7 (`prisma-client` + `@prisma/adapter-pg`) sobre PostgreSQL 18, Zod 4, Vitest, ESLint (typescript-eslint type-checked) + Prettier, pnpm.
+**Stack:** Node + TypeScript ESM (`nodenext`, `strict`), Fastify 5, Prisma 7 (`prisma-client` + `@prisma/adapter-pg`) on PostgreSQL 18, Zod 4, Vitest, ESLint (typescript-eslint type-checked) + Prettier, pnpm.
 
-**Mapa de carpetas:**
+**Folder map:**
 
 ```
 src/
-  main.ts            arranque: buildApp() + listen (0.0.0.0:env.PORT)
-  app.ts             buildApp(): Fastify, CORS, /health, errorHandler, rutas
-  routes/            plugins Fastify: enlazan verbo+ruta → controller
-  controllers/       esquemas Zod (body/query/params) y present()
-  services/          lógica de negocio + acceso a datos (Prisma)
-  handlers/          errorHandler.ts (mapeo central de errores)
+  main.ts            startup: buildApp() + listen (0.0.0.0:env.PORT)
+  app.ts             buildApp(): Fastify, CORS, /health, errorHandler, routes
+  routes/            Fastify plugins: bind verb+path → controller
+  controllers/       Zod schemas (body/query/params) and present()
+  services/          business logic + data access (Prisma)
+  handlers/          errorHandler.ts (central error mapping)
   shared/            AppError
-  config/env.ts      valida process.env con Zod y exporta `env`
-  db/client.ts       singleton `prisma`
-  db/generated/      cliente Prisma generado (gitignored)
+  config/env.ts      validates process.env with Zod and exports `env`
+  db/client.ts       `prisma` singleton
+  db/generated/      generated Prisma client (gitignored)
 prisma/              schema.prisma + migrations/
-tests/               *.test.ts (Vitest, sin BD)
-docs/api.md          contrato de los endpoints
-docs/api/            colección de requests (OpenCollection/Bruno) para probar a mano
-prisma.config.ts     config del CLI de Prisma
-docker-compose.yml   Postgres local
+tests/               *.test.ts (Vitest, no DB)
+docs/api.md          endpoint contract
+docs/api/            request collection (OpenCollection/Bruno) for manual testing
+prisma.config.ts     Prisma CLI config
+docker-compose.yml   local Postgres
 ```
 
-## ¿Por qué existe cada parte?
+## Why does each part exist?
 
-- **routes → controllers → services:** cada capa tiene una sola responsabilidad. Rutas = cableado; controllers = frontera HTTP (validar entrada, formatear salida); services = reglas y datos, sin conocer Fastify.
-- **`AppError` + `errorHandler`:** un solo lugar decide el formato de error `{ error: { code, message, traceId } }`. `ZodError` → 422 `VALIDATION_ERROR` (con `details`), `AppError` → su `statusCode`/`code`, resto → 500. Por eso los handlers solo hacen `.parse()` y lanzan; no capturan errores.
-- **`buildApp()` separado de `main.ts`:** permite tests con `app.inject` sin abrir puerto.
-- **`config/env.ts`:** falla rápido (`process.exit(1)`) si el entorno es inválido; el resto del código importa `env`, nunca `process.env`.
-- **`docs/api.md`:** contrato público; cliente y código deben coincidir con él.
-- **Reglas por capa:** el detalle de services, tests y Prisma vive en `.claude/rules/` y se carga al tocar esos archivos. Convenciones REST completas: skill `convenciones-api`.
+- **routes → controllers → services:** each layer has a single responsibility. Routes = wiring; controllers = HTTP boundary (validate input, format output); services = rules and data, with no knowledge of Fastify.
+- **`AppError` + `errorHandler`:** a single place decides the error format `{ error: { code, message, traceId } }`. `ZodError` → 422 `VALIDATION_ERROR` (with `details`), `AppError` → its `statusCode`/`code`, anything else → 500. That is why handlers only `.parse()` and throw; they do not catch errors.
+- **`buildApp()` separate from `main.ts`:** allows tests with `app.inject` without opening a port.
+- **`config/env.ts`:** fails fast (`process.exit(1)`) if the environment is invalid; the rest of the code imports `env`, never `process.env`.
+- **`docs/api.md`:** public contract; client and code must match it.
+- **Rules per layer:** the details for services, tests and Prisma live in `.claude/rules/` and are loaded when touching those files. Full REST conventions: skill `api-conventions`.
 
-## ¿Cómo se trabaja?
+## How do we work?
 
-### Primera vez
+### First time
 
 ```
-cp .env.example .env            # DB_PASSWORD es necesaria para docker compose
+cp .env.example .env            # DB_PASSWORD is required by docker compose
 docker compose up -d postgres
 pnpm install
-pnpm db:generate                # obligatorio: sin él tsc/dev/lint fallan
+pnpm db:generate                # mandatory: without it tsc/dev/lint fail
 pnpm db:migrate
 ```
 
-### Comandos
+### Commands
 
-- `pnpm dev` — servidor con recarga (`tsx watch`) en :3000
-- `pnpm test` — Vitest; un archivo: `pnpm test -- tests/expenses.test.ts`; un test: `pnpm test -- -t "nombre"`
-- `pnpm typecheck` — `tsc --noEmit` (incluye `tests/`)
+- `pnpm dev` — server with reload (`tsx watch`) on :3000
+- `pnpm test` — Vitest; one file: `pnpm test -- tests/expenses.test.ts`; one test: `pnpm test -- -t "name"`
+- `pnpm typecheck` — `tsc --noEmit` (includes `tests/`)
 - `pnpm lint` / `pnpm format` — ESLint / Prettier
-- `pnpm db:generate` — tras clonar y tras cada cambio de `schema.prisma`
+- `pnpm db:generate` — after cloning and after every change to `schema.prisma`
 - `pnpm db:migrate` — `prisma migrate dev`
-- `pnpm build` / `pnpm start` — compila a `dist/` y ejecuta
+- `pnpm build` / `pnpm start` — compile to `dist/` and run
 
-### Verificación (antes de dar algo por terminado)
+### Verification (before considering something done)
 
-`pnpm typecheck && pnpm lint && pnpm test`. Si cambiaste un endpoint, actualiza `docs/api.md`.
+`pnpm typecheck && pnpm lint && pnpm test`. If you changed an endpoint, update `docs/api.md`.
 
-### Reglas del proyecto
+### Project rules
 
-- Imports relativos con extensión `.js` (ESM); `import type` para tipos (`verbatimModuleSyntax`).
-- TypeScript estricto: sin `any`, `type` en vez de `interface`, args no usados con prefijo `_`. `exactOptionalPropertyTypes` activo: sin `undefined` explícito en props opcionales (spread condicional).
-- Prettier: comillas dobles, `;`, coma final, 80 columnas.
-- Ramas `feat/…` y `fix/…`; commits con Conventional Commits.
-- `.env` está gitignored: nunca lo commitees; documenta variables nuevas en `.env.example` y `config/env.ts`.
+- Relative imports with the `.js` extension (ESM); `import type` for types (`verbatimModuleSyntax`).
+- Strict TypeScript: no `any`, `type` instead of `interface`, unused args prefixed with `_`. `exactOptionalPropertyTypes` is on: no explicit `undefined` in optional props (conditional spread).
+- Prettier: double quotes, `;`, trailing comma, 80 columns.
+- Branches `feat/…` and `fix/…`; commits with Conventional Commits.
+- `.env` is gitignored: never commit it; document new variables in `.env.example` and `config/env.ts`.
+- Language: all documentation, code, domain terms and error messages are written in **English**.
+
+## Agent skills
+
+### Issue tracker
+
+Issues and specs live as markdown in `.scratch/<feature>/`. See `docs/agents/issue-tracker.md`.
+
+### Domain docs
+
+Single-context (one `CONTEXT.md` + `docs/adr/` at the root). See `docs/agents/domain.md`.

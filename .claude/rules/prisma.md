@@ -7,7 +7,7 @@ paths:
 
 # Prisma
 
-- No edites migraciones ya aplicadas: crea una nueva.
-- Tras cambiar `schema.prisma` ejecuta `pnpm db:generate`.
-- El cliente se importa de `./generated/client.js`, no de `@prisma/client`.
-- `prisma.config.ts` lee `DB_*` por su cuenta (no pasa por `env.ts`).
+- Do not edit migrations that were already applied: create a new one.
+- After changing `schema.prisma`, run `pnpm db:generate`.
+- Import the client from `./generated/client.js`, not from `@prisma/client`.
+- `prisma.config.ts` reads `DB_*` on its own (it does not go through `env.ts`).

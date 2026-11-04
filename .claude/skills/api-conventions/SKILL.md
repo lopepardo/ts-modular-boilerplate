@@ -1,6 +1,7 @@
 ---
-name: convenciones-api
+name: api-conventions
 description: REST conventions for the expenses API (routes, JSON shape, validation, error format, layering). Use when creating or modifying endpoints, validations or error responses.
+disable-model-invocation: true
 ---
 
 Reference implementation: `src/routes/expenses.ts`, `src/controllers/expenses.ts`, `src/services/expenses.ts`. Public contract: `docs/api.md`.
