@@ -10,12 +10,18 @@ import {
 import { prisma } from "./platform/db/client.js";
 import { errorHandler } from "./platform/http/errorHandler.js";
 import { createExpensesService } from "./services/expenses.js";
+import {
+  createInMemoryExampleRepository,
+  createTemplateModule,
+  type ExampleRepository,
+} from "./modules/_template/index.js";
 import { expensesRoutes } from "./routes/expenses.js";
 
 export type AppDependencies = {
   clock: Clock;
   generateId: IdGenerator;
   expensesRepository: ExpensesRepository;
+  templateRepository: ExampleRepository;
 };
 
 /** Single composition root (ADR 0002): real dependencies unless overridden. */
@@ -24,6 +30,7 @@ export const buildApp = async (overrides: Partial<AppDependencies> = {}) => {
     clock: systemClock,
     generateId: uuidGenerator,
     expensesRepository: createPrismaExpensesRepository(prisma),
+    templateRepository: createInMemoryExampleRepository(),
     ...overrides,
   };
 
@@ -37,6 +44,12 @@ export const buildApp = async (overrides: Partial<AppDependencies> = {}) => {
 
   const expensesService = createExpensesService(deps.expensesRepository);
   await app.register(expensesRoutes(expensesService), { prefix: "/expenses" });
+
+  const template = createTemplateModule({
+    repository: deps.templateRepository,
+    generateId: deps.generateId,
+  });
+  await app.register(template.routes, { prefix: "/_template" });
 
   return app;
 };
