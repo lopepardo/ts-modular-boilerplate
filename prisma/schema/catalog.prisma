@@ -1,0 +1,9 @@
+model Book {
+  id      String  @id @default(uuid())
+  title   String
+  author  String
+  isbn    String
+  retired Boolean @default(false)
+
+  @@index([isbn])
+}

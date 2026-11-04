@@ -11,6 +11,11 @@ import { prisma } from "./platform/db/client.js";
 import { errorHandler } from "./platform/http/errorHandler.js";
 import { createExpensesService } from "./services/expenses.js";
 import {
+  createCatalogModule,
+  createPrismaBookRepository,
+  type BookRepository,
+} from "./modules/catalog/index.js";
+import {
   createInMemoryExampleRepository,
   createTemplateModule,
   type ExampleRepository,
@@ -22,6 +27,7 @@ export type AppDependencies = {
   generateId: IdGenerator;
   expensesRepository: ExpensesRepository;
   templateRepository: ExampleRepository;
+  bookRepository: BookRepository;
 };
 
 /** Single composition root (ADR 0002): real dependencies unless overridden. */
@@ -31,6 +37,7 @@ export const buildApp = async (overrides: Partial<AppDependencies> = {}) => {
     generateId: uuidGenerator,
     expensesRepository: createPrismaExpensesRepository(prisma),
     templateRepository: createInMemoryExampleRepository(),
+    bookRepository: createPrismaBookRepository(prisma),
     ...overrides,
   };
 
@@ -50,6 +57,12 @@ export const buildApp = async (overrides: Partial<AppDependencies> = {}) => {
     generateId: deps.generateId,
   });
   await app.register(template.routes, { prefix: "/_template" });
+
+  const catalog = createCatalogModule({
+    repository: deps.bookRepository,
+    generateId: deps.generateId,
+  });
+  await app.register(catalog.routes, { prefix: "/books" });
 
   return app;
 };
