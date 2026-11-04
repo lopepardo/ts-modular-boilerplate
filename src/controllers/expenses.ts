@@ -1,5 +1,6 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
 import { z } from "zod";
+
 import type { Expense } from "../repositories/expenses.js";
 import type { ExpensesService } from "../services/expenses.js";
 

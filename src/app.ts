@@ -1,15 +1,16 @@
 import Fastify from "fastify";
+import cors from "@fastify/cors";
 
-import { prisma } from "./platform/db/client.js";
-import { registerHttpPlugins } from "./platform/http/plugins.js";
+import { systemClock, type Clock } from "./shared/clock.js";
+import { uuidGenerator, type IdGenerator } from "./shared/ids.js";
 import {
   createPrismaExpensesRepository,
   type ExpensesRepository,
 } from "./repositories/expenses.js";
-import { expensesRoutes } from "./routes/expenses.js";
+import { prisma } from "./platform/db/client.js";
+import { errorHandler } from "./platform/http/errorHandler.js";
 import { createExpensesService } from "./services/expenses.js";
-import { systemClock, type Clock } from "./shared/clock.js";
-import { uuidGenerator, type IdGenerator } from "./shared/ids.js";
+import { expensesRoutes } from "./routes/expenses.js";
 
 export type AppDependencies = {
   clock: Clock;
@@ -28,7 +29,11 @@ export const buildApp = async (overrides: Partial<AppDependencies> = {}) => {
 
   const app = Fastify({ logger: true });
 
-  await registerHttpPlugins(app);
+  app.setErrorHandler(errorHandler);
+
+  await app.register(cors, { origin: "*" });
+
+  app.get("/health", async (_request, _reply) => ({ status: "ok" }));
 
   const expensesService = createExpensesService(deps.expensesRepository);
   await app.register(expensesRoutes(expensesService), { prefix: "/expenses" });
