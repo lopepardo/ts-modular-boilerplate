@@ -10,7 +10,7 @@ const prismaMock = vi.hoisted(() => ({
   },
 }));
 
-vi.mock("../src/db/client.js", () => ({ prisma: prismaMock }));
+vi.mock("../src/platform/db/client.js", () => ({ prisma: prismaMock }));
 
 const { buildApp } = await import("../src/app.js");
 

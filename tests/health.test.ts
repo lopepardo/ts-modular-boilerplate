@@ -1,6 +1,6 @@
 import { afterAll, describe, expect, it, vi } from "vitest";
 
-vi.mock("../src/db/client.js", () => ({ prisma: {} }));
+vi.mock("../src/platform/db/client.js", () => ({ prisma: {} }));
 
 const { buildApp } = await import("../src/app.js");
 

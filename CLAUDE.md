@@ -9,17 +9,15 @@ Personal expenses REST API. Domain and error messages in **English** (`expenses`
 ```
 src/
   main.ts            startup: buildApp() + listen (0.0.0.0:env.PORT)
-  app.ts             buildApp(): Fastify, CORS, /health, errorHandler, routes
-  routes/            Fastify plugins: bind verb+path → controller
+  app.ts             buildApp(overrides): composition root (ADR 0002)
+  routes/            Fastify plugin factories: bind verb+path → controller
   controllers/       Zod schemas (body/query/params) and present()
-  services/          business logic + data access (Prisma)
-  handlers/          errorHandler.ts (central error mapping)
-  shared/            AppError
-  config/env.ts      validates process.env with Zod and exports `env`
-  db/client.ts       `prisma` singleton
-  db/generated/      generated Prisma client (gitignored)
+  services/          business logic (createXService(repository))
+  repositories/      data access interfaces + Prisma implementations
+  platform/          config/env.ts, db/client.ts (+ generated/), http/ (errorHandler, plugins)
+  shared/            BusinessError/NotFoundError/ConflictError, Clock, IdGenerator
 prisma/              schema.prisma + migrations/
-tests/               *.test.ts (Vitest, no DB)
+tests/               *.test.ts (Vitest, no DB); support/ = in-memory fakes
 docs/api.md          endpoint contract
 docs/api/            request collection (OpenCollection/Bruno) for manual testing
 prisma.config.ts     Prisma CLI config
@@ -29,9 +27,9 @@ docker-compose.yml   local Postgres
 ## Why does each part exist?
 
 - **routes → controllers → services:** each layer has a single responsibility. Routes = wiring; controllers = HTTP boundary (validate input, format output); services = rules and data, with no knowledge of Fastify.
-- **`AppError` + `errorHandler`:** a single place decides the error format `{ error: { code, message, traceId } }`. `ZodError` → 422 `VALIDATION_ERROR` (with `details`), `AppError` → its `statusCode`/`code`, anything else → 500. That is why handlers only `.parse()` and throw; they do not catch errors.
+- **`BusinessError` + `errorHandler`:** business errors carry only `code` and `message`; a single place maps them to HTTP and decides the format `{ error: { code, message, traceId } }`. `ZodError` → 422 `VALIDATION_ERROR` (with `details`), `NotFoundError` → 404, `ConflictError` → 409, other `BusinessError` → 422, anything else → 500. That is why handlers only `.parse()` and throw; they do not catch errors.
 - **`buildApp()` separate from `main.ts`:** allows tests with `app.inject` without opening a port.
-- **`config/env.ts`:** fails fast (`process.exit(1)`) if the environment is invalid; the rest of the code imports `env`, never `process.env`.
+- **`platform/config/env.ts`:** fails fast (`process.exit(1)`) if the environment is invalid; the rest of the code imports `env`, never `process.env`.
 - **`docs/api.md`:** public contract; client and code must match it.
 - **Rules per layer:** the details for services, tests and Prisma live in `.claude/rules/` and are loaded when touching those files. Full REST conventions: skill `api-conventions`.
 
@@ -67,7 +65,7 @@ pnpm db:migrate
 - Strict TypeScript: no `any`, `type` instead of `interface`, unused args prefixed with `_`. `exactOptionalPropertyTypes` is on: no explicit `undefined` in optional props (conditional spread).
 - Prettier: double quotes, `;`, trailing comma, 80 columns.
 - Branches `feat/…` and `fix/…`; commits with Conventional Commits.
-- `.env` is gitignored: never commit it; document new variables in `.env.example` and `config/env.ts`.
+- `.env` is gitignored: never commit it; document new variables in `.env.example` and `platform/config/env.ts`.
 - Language: all documentation, code, domain terms and error messages are written in **English**.
 
 ## Agent skills

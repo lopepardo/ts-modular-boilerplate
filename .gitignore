@@ -212,4 +212,4 @@ $RECYCLE.BIN/
 # OS 
 
 # Prisma generated client
-src/db/generated/
+src/platform/db/generated/

@@ -2,7 +2,7 @@
 paths:
   - "prisma/**"
   - "prisma.config.ts"
-  - "src/db/**/*.ts"
+  - "src/platform/db/**/*.ts"
 ---
 
 # Prisma

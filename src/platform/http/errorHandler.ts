@@ -1,6 +1,16 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
 import { z } from "zod";
-import { AppError } from "../shared/AppError.js";
+import {
+  BusinessError,
+  ConflictError,
+  NotFoundError,
+} from "../../shared/errors.js";
+
+const statusFor = (error: BusinessError): number => {
+  if (error instanceof NotFoundError) return 404;
+  if (error instanceof ConflictError) return 409;
+  return 422;
+};
 
 export const errorHandler = (
   error: Error,
@@ -18,8 +28,8 @@ export const errorHandler = (
     });
   }
 
-  if (error instanceof AppError) {
-    return reply.code(error.statusCode).send({
+  if (error instanceof BusinessError) {
+    return reply.code(statusFor(error)).send({
       error: {
         code: error.code,
         message: error.message,
