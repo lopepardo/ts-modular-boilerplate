@@ -22,6 +22,7 @@ export type CatalogModule = {
 export const createCatalogModule = (deps: CatalogDeps): CatalogModule => {
   const registerBook = registerBookUseCase(deps);
   const getBook = getBookUseCase(deps.repository);
+
   return {
     routes: bookRoutes({ registerBook, getBook }),
     registerBook,

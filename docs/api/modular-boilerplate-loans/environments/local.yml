@@ -3,6 +3,3 @@ variables:
   - name: baseUrl
     value: http://localhost:3000
     description: ""
-  - name: expenseId
-    value: 640da340-e611-46f3-bfaf-d8ed6783d481
-    description: ""

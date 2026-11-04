@@ -2,8 +2,8 @@ services:
   postgres:
     image: postgres:18-alpine
     environment:
-      POSTGRES_USER: ${DB_USER:-apigastos}
-      POSTGRES_DB: ${DB_NAME:-apigastos}
+      POSTGRES_USER: ${DB_USER:-apilibrary}
+      POSTGRES_DB: ${DB_NAME:-apilibrary}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
       - "5432:5432"
@@ -13,7 +13,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "pg_isready -U ${DB_USER:-apigastos} -d ${DB_NAME:-apigastos}",
+          "pg_isready -U ${DB_USER:-apilibrary} -d ${DB_NAME:-apilibrary}",
         ]
       interval: 5s
       timeout: 5s

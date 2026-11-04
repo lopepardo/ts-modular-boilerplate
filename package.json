@@ -10,8 +10,8 @@
     "typecheck": "tsc --noEmit -p tsconfig.eslint.json",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "db:migrate": "prisma migrate dev",
-    "db:generate": "prisma generate"
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev"
   },
   "keywords": [],
   "author": "",

@@ -21,12 +21,11 @@ const present = (book: Book) => ({
   retired: book.retired,
 });
 
-export const bookRoutes =
-  (deps: {
-    registerBook: RegisterBook;
-    getBook: GetBook;
-  }): FastifyPluginAsync =>
-  async (app) => {
+export const bookRoutes = (deps: {
+  registerBook: RegisterBook;
+  getBook: GetBook;
+}): FastifyPluginAsync => {
+  return async (app) => {
     app.post("/", async (request, reply) => {
       const input = NewBookSchema.parse(request.body);
       const book = await deps.registerBook(input);
@@ -38,3 +37,4 @@ export const bookRoutes =
       return present(await deps.getBook(id));
     });
   };
+};
