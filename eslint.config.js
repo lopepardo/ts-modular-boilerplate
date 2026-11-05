@@ -7,8 +7,8 @@ const modules = readdirSync(modulesDir, { withFileTypes: true })
   .filter((entry) => entry.isDirectory())
   .map((entry) => entry.name);
 
-const restrict = (...patterns) => ({
-  "no-restricted-imports": ["error", { patterns }],
+const restrict = (patterns, paths = []) => ({
+  "no-restricted-imports": ["error", { patterns, paths }],
 });
 
 /** Only a module's public entry point (`index.js`) may be imported. */
@@ -23,16 +23,40 @@ const adapterLayers = {
   message: "application and domain code must not import from http or infra. See ADR 0001.",
 };
 
+/** `application` and `domain` never touch platform. */
+const platformLayer = {
+  group: ["**/platform", "**/platform/**"],
+  message: "application and domain code must not import from platform. See ADR 0001.",
+};
+
+/** `domain` is the innermost layer: it cannot see `application`. */
+const innerLayer = {
+  group: ["**/application", "**/application/**"],
+  message: "domain code must not import from application. See ADR 0001.",
+};
+
+/** Framework and driver packages belong in `http` / `infra`. */
+const vendorPaths = ["fastify", "@prisma/client", "@prisma/adapter-pg", "pg", "zod"].map(
+  (name) => ({
+    name,
+    message: `${name} belongs in http or infra, not in application/domain. See ADR 0001.`,
+  }),
+);
+
 const boundaryConfigs = modules.flatMap((name) => {
   const others = modules.filter((other) => other !== name).map(internalsOf);
   return [
     {
       files: [`src/modules/${name}/**/*.ts`],
-      rules: restrict(...others),
+      rules: restrict(others),
     },
     {
-      files: [`src/modules/${name}/application/**/*.ts`, `src/modules/${name}/domain/**/*.ts`],
-      rules: restrict(...others, adapterLayers),
+      files: [`src/modules/${name}/application/**/*.ts`],
+      rules: restrict([...others, adapterLayers, platformLayer], vendorPaths),
+    },
+    {
+      files: [`src/modules/${name}/domain/**/*.ts`],
+      rules: restrict([...others, adapterLayers, platformLayer, innerLayer], vendorPaths),
     },
   ];
 });
@@ -69,7 +93,7 @@ export default [
   // Module boundaries (ADR 0001): app.ts and tests see only public entry points.
   {
     files: ["src/app.ts", "src/main.ts", "tests/**/*.ts"],
-    rules: restrict(...modules.map(internalsOf)),
+    rules: restrict(modules.map(internalsOf)),
   },
   ...boundaryConfigs,
 ];

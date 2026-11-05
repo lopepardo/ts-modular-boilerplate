@@ -1,6 +1,6 @@
 # Feature-first modular monolith with internal layers
 
-Code is organized as `src/modules/<module>/{http,application,domain,infra}` instead of global horizontal layers (`routes/`, `controllers/`, `services/`). Each module exposes only its `index.ts`; boundaries between modules are enforced with ESLint (`no-restricted-imports`). `domain` and `application` do not import from `http` or `infra`, which is as much "hexagonal" as is required.
+Code is organized as `src/modules/<module>/{http,application,domain,infra}` instead of global horizontal layers (`routes/`, `controllers/`, `services/`). Each module exposes only its `index.ts`; boundaries between modules are enforced with ESLint (`no-restricted-imports`). `domain` and `application` do not import from `http`, `infra`, `platform`, or framework/driver packages (`fastify`, `zod`, Prisma, `pg`), and `domain` does not import from `application` (verified in `tests/architecture-rules.test.ts`), which is as much "hexagonal" as is required.
 
 ## Considered Options
 
