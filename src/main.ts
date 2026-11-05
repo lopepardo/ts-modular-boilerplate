@@ -3,7 +3,7 @@ import { env } from "./platform/config/env.js";
 import { createPrismaClient } from "./platform/db/client.js";
 
 const prisma = createPrismaClient(env);
-const app = await buildApp({ prisma });
+const app = await buildApp({ config: env, prisma });
 
 // Stop accepting connections, drain in-flight requests, then release the DB.
 // Docker sends SIGKILL after its stop grace period, so no watchdog is needed.

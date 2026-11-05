@@ -2,12 +2,14 @@ import { afterAll, describe, expect, it } from "vitest";
 
 import { buildApp } from "../src/app.js";
 import { fakePrisma } from "./support/fakePrisma.js";
+import { testConfig } from "./support/testConfig.js";
 import { createInMemoryBookRepository } from "../src/modules/catalog/index.js";
 
 type ErrorBody = { error: Record<string, unknown> };
 
 let nextId = 0;
 const app = await buildApp({
+  config: testConfig,
   prisma: fakePrisma,
   generateId: () => `00000000-0000-4000-8000-${String(++nextId).padStart(12, "0")}`,
   catalog: { repository: createInMemoryBookRepository() },

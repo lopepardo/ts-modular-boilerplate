@@ -2,15 +2,17 @@ import cors from "@fastify/cors";
 import Fastify from "fastify";
 import { validatorCompiler } from "fastify-type-provider-zod";
 
-import { env } from "../config/env.js";
+import type { AppConfig } from "../config/env.js";
 import { buildLoggerOptions } from "../logging/logger.js";
 import { errorHandler } from "./errorHandler.js";
 import { notFoundHandler } from "./notFoundHandler.js";
 
+export type ServerConfig = Pick<AppConfig, "APP_NAME" | "APP_ENV" | "LOG_LEVEL">;
+
 /** Fastify with the cross-cutting setup only: it knows nothing about modules. */
-export const createServer = async () => {
+export const createServer = async (config: ServerConfig) => {
   const app = Fastify({
-    logger: buildLoggerOptions(env),
+    logger: buildLoggerOptions(config),
   });
 
   // Zod validates requests from each route's `schema`.

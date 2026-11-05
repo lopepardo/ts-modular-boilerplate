@@ -2,6 +2,7 @@ import { afterAll, describe, expect, it } from "vitest";
 
 import { buildApp } from "../src/app.js";
 import { fakePrisma } from "./support/fakePrisma.js";
+import { testConfig } from "./support/testConfig.js";
 import { createInMemoryBookRepository } from "../src/modules/catalog/index.js";
 
 type ErrorBody = { error: Record<string, unknown> };
@@ -9,6 +10,7 @@ type ErrorBody = { error: Record<string, unknown> };
 const FIXED_ID = "0b9f3a52-6c1e-4f7e-9d3a-2f6b8a1c4e10";
 
 const app = await buildApp({
+  config: testConfig,
   prisma: fakePrisma,
   generateId: () => FIXED_ID,
   catalog: { repository: createInMemoryBookRepository() },

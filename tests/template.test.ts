@@ -4,13 +4,14 @@ import {
   createInMemoryExampleRepository,
   createTemplateModule,
 } from "../src/modules/_template/index.js";
+import { testConfig } from "./support/testConfig.js";
 import { createServer } from "../src/platform/http/createServer.js";
 
 const FIXED_ID = "0b9f3a52-6c1e-4f7e-9d3a-2f6b8a1c4e10";
 type ErrorBody = { error: Record<string, unknown> };
 
 // `_template` is not mounted by `buildApp`: the test wires it onto a bare server.
-const app = await createServer();
+const app = await createServer(testConfig);
 const template = createTemplateModule({
   repository: createInMemoryExampleRepository(),
   generateId: () => FIXED_ID,

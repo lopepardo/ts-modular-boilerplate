@@ -6,7 +6,7 @@ Tests pass in-memory fakes instead of mocking modules, and any implicit dependen
 
 ## Who does what
 
-- `main.ts` owns the process: it creates the Prisma client (`createPrismaClient(env)`), calls `buildApp({ prisma })`, listens, and on shutdown closes the app and disconnects the client. It is the only place that touches `process` signals and the real database connection.
+- `main.ts` owns the process: it creates the Prisma client (`createPrismaClient(env)`), calls `buildApp({ config: env, prisma })`, listens, and on shutdown closes the app and disconnects the client. It is the only place that touches `process` signals and the real database connection.
 - `app.ts` (`buildApp`) assembles the application: it calls `createServer()` and, for each module, builds it with its repository and mounts its routes under a prefix. It imports `PrismaClient` only as a type and never creates it.
 - `platform/http/createServer.ts` holds the cross-cutting Fastify setup (logger, validator, error handlers, cors, `/health`) and knows nothing about modules.
 - A module's `index.ts` is its public API: the `createXModule(deps)` factory, its types and the repository implementations that `app.ts` may choose from. It does not decide which implementation runs; the composition root does.
