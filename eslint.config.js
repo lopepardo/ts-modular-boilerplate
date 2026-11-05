@@ -7,8 +7,8 @@ const modules = readdirSync(modulesDir, { withFileTypes: true })
   .filter((entry) => entry.isDirectory())
   .map((entry) => entry.name);
 
-const restrict = (patterns, paths = []) => ({
-  "no-restricted-imports": ["error", { patterns, paths }],
+const restrict = (patterns) => ({
+  "no-restricted-imports": ["error", { patterns }],
 });
 
 /** Only a module's public entry point (`index.js`) may be imported. */
@@ -35,13 +35,22 @@ const innerLayer = {
   message: "domain code must not import from application. See ADR 0001.",
 };
 
-/** Framework and driver packages belong in `http` / `infra`. */
-const vendorPaths = ["fastify", "@prisma/client", "@prisma/adapter-pg", "pg", "zod"].map(
-  (name) => ({
-    name,
-    message: `${name} belongs in http or infra, not in application/domain. See ADR 0001.`,
-  }),
-);
+/** Framework and driver packages belong in `http` / `infra`. Wildcards also cover subpaths and sibling packages. */
+const vendorPackages = {
+  group: [
+    "fastify",
+    "fastify/**",
+    "fastify-*",
+    "@fastify/*",
+    "@prisma/*",
+    "pg",
+    "pg/**",
+    "pg-*",
+    "zod",
+    "zod/**",
+  ],
+  message: "fastify, prisma, pg and zod packages belong in http or infra, not in application/domain. See ADR 0001.",
+};
 
 const boundaryConfigs = modules.flatMap((name) => {
   const others = modules.filter((other) => other !== name).map(internalsOf);
@@ -52,11 +61,11 @@ const boundaryConfigs = modules.flatMap((name) => {
     },
     {
       files: [`src/modules/${name}/application/**/*.ts`],
-      rules: restrict([...others, adapterLayers, platformLayer], vendorPaths),
+      rules: restrict([...others, adapterLayers, platformLayer, vendorPackages]),
     },
     {
       files: [`src/modules/${name}/domain/**/*.ts`],
-      rules: restrict([...others, adapterLayers, platformLayer, innerLayer], vendorPaths),
+      rules: restrict([...others, adapterLayers, platformLayer, innerLayer, vendorPackages]),
     },
   ];
 });
