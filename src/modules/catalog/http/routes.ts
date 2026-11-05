@@ -1,7 +1,7 @@
 import type { FastifyPluginAsync } from "fastify";
+import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
 
-import { parseInput } from "../../../platform/http/requestValidation.js";
 import type { Book } from "../application/bookRepository.js";
 import type { GetBook } from "../application/getBook.js";
 import type { RegisterBook } from "../application/registerBook.js";
@@ -26,16 +26,16 @@ export const bookRoutes = (deps: {
   registerBook: RegisterBook;
   getBook: GetBook;
 }): FastifyPluginAsync => {
-  return async (app) => {
-    app.post("/", async (request, reply) => {
-      const input = parseInput(NewBookSchema, request.body);
-      const book = await deps.registerBook(input);
+  return async (instance) => {
+    const app = instance.withTypeProvider<ZodTypeProvider>();
+
+    app.post("/", { schema: { body: NewBookSchema } }, async (request, reply) => {
+      const book = await deps.registerBook(request.body);
       return reply.code(201).send(present(book));
     });
 
-    app.get("/:id", async (request, reply) => {
-      const { id } = parseInput(ParamsSchema, request.params);
-      const book = present(await deps.getBook(id));
+    app.get("/:id", { schema: { params: ParamsSchema } }, async (request, reply) => {
+      const book = present(await deps.getBook(request.params.id));
       return reply.code(200).send(book);
     });
   };

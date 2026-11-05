@@ -1,5 +1,5 @@
 {
-  "name": "personal-expenses-app",
+  "name": "ts-modular-boilerplate",
   "version": "1.0.0",
   "description": "",
   "scripts": {
@@ -44,6 +44,7 @@
     "@prisma/client": "^7.10.1",
     "dotenv": "^18.0.9",
     "fastify": "^5.12.7",
+    "fastify-type-provider-zod": "^7.0.0",
     "pg": "^8.23.1",
     "zod": "^4.6.7"
   }

@@ -1,3 +1,5 @@
+import { hasZodFastifySchemaValidationErrors } from "fastify-type-provider-zod";
+
 import {
   BusinessError,
   ConflictError,
@@ -5,7 +7,6 @@ import {
   NotFoundError,
   UnauthorizedError,
 } from "../../shared/errors.js";
-import { RequestValidationError } from "./requestValidation.js";
 
 export type ErrorDetail = { path: string; message: string };
 
@@ -73,14 +74,15 @@ const readFastifyError = (error: unknown): { code?: string; statusCode?: number 
 
 /** Pure: turns anything that was thrown into the public error contract. */
 export const toErrorResponse = (error: unknown): ErrorResponse => {
-  if (error instanceof RequestValidationError) {
+  if (hasZodFastifySchemaValidationErrors(error)) {
     return {
       status: 400,
       code: "VALIDATION_ERROR",
-      message: error.message,
-      details: error.issues.map((issue) => ({
-        path: issue.path.map(String).join("."),
-        message: issue.message,
+      message: "Invalid request data",
+      details: error.validation.map((issue) => ({
+        // "/tags/0/label" -> "tags.0.label"
+        path: issue.instancePath.replace(/^\//, "").split("/").join("."),
+        message: issue.message ?? "Invalid value",
       })),
     };
   }

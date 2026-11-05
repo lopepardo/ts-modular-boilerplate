@@ -1,10 +1,14 @@
 import Fastify from "fastify";
+import {
+  serializerCompiler,
+  validatorCompiler,
+  type ZodTypeProvider,
+} from "fastify-type-provider-zod";
 import { afterAll, describe, expect, it } from "vitest";
 import { z } from "zod";
 
 import { errorHandler } from "../src/platform/http/errorHandler.js";
 import { notFoundHandler } from "../src/platform/http/notFoundHandler.js";
-import { parseInput } from "../src/platform/http/requestValidation.js";
 import {
   BusinessError,
   ConflictError,
@@ -28,6 +32,8 @@ const Schema = z.object({
 });
 
 const app = Fastify({ bodyLimit: 64 });
+app.setValidatorCompiler(validatorCompiler);
+app.setSerializerCompiler(serializerCompiler);
 app.setErrorHandler(errorHandler);
 app.setNotFoundHandler(notFoundHandler);
 app.get("/not-found", async () => {
@@ -52,7 +58,9 @@ app.get("/stray-zod", async () => {
   // A ZodError escaping a service is a server fault, not a client error.
   return z.string().parse(42);
 });
-app.post("/validate", async (request) => parseInput(Schema, request.body));
+app
+  .withTypeProvider<ZodTypeProvider>()
+  .post("/validate", { schema: { body: Schema } }, async (request) => request.body);
 
 const post = (payload: string, contentType = "application/json") =>
   app.inject({
@@ -135,7 +143,7 @@ describe("errorHandler", () => {
     expect(res.body).not.toContain("secret internals");
   });
 
-  it("treats a ZodError thrown outside parseInput as a 500", async () => {
+  it("treats a ZodError thrown outside request validation as a 500", async () => {
     const res = await app.inject({ method: "GET", url: "/stray-zod" });
 
     expect(res.statusCode).toBe(500);
