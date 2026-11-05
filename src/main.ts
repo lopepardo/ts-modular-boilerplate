@@ -7,11 +7,14 @@ const app = await buildApp({ prisma });
 
 // Stop accepting connections, drain in-flight requests, then release the DB.
 // Docker sends SIGKILL after its stop grace period, so no watchdog is needed.
+let shuttingDown = false;
 const shutdown = async (signal: NodeJS.Signals) => {
+  if (shuttingDown) return;
+  shuttingDown = true;
   app.log.info({ signal }, "Shutting down gracefully");
   try {
-    await prisma.$disconnect();
     await app.close();
+    await prisma.$disconnect();
     process.exit(0);
   } catch (error) {
     app.log.error(error, "Error during shutdown");
@@ -19,8 +22,8 @@ const shutdown = async (signal: NodeJS.Signals) => {
   }
 };
 
-process.once("SIGTERM", (signal) => void shutdown(signal));
-process.once("SIGINT", (signal) => void shutdown(signal));
+process.on("SIGTERM", (signal) => void shutdown(signal));
+process.on("SIGINT", (signal) => void shutdown(signal));
 
 try {
   await app.listen({ port: env.PORT, host: "0.0.0.0" });
