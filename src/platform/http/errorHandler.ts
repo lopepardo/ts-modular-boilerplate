@@ -38,7 +38,7 @@ export const errorHandler = (
     });
   }
 
-  request.log.error(error);
+  request.log.error({ err: error }, "Unhandled error");
 
   return reply.code(500).send({
     error: {

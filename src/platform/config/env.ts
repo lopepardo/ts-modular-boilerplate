@@ -2,10 +2,13 @@ import "dotenv/config";
 import { z } from "zod";
 
 const RawEnvSchema = z.object({
+  APP_NAME: z.string().default("ts-modular-boilerplate"),
   APP_ENV: z.enum(["development", "test", "production"]).default("development"),
   APP_VERSION: z.string().default("unversioned"),
   PORT: z.coerce.number().int().min(1).max(65535).default(3000),
-  LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),
+  LOG_LEVEL: z
+    .enum(["trace", "debug", "info", "warn", "error", "fatal", "silent"])
+    .default("debug"),
   DB_HOST: z.string().default("localhost"), //postgres
   DB_PORT: z.coerce.number().int().default(5432),
   DB_USER: z.string().default("apigastos"),
@@ -25,6 +28,7 @@ const RawEnvSchema = z.object({
 
 const AppConfigSchema = RawEnvSchema.transform((rawEnv) => {
   return {
+    APP_NAME: rawEnv.APP_NAME,
     APP_ENV: rawEnv.APP_ENV,
     APP_VERSION: rawEnv.APP_VERSION,
     PORT: rawEnv.PORT,

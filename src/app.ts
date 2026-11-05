@@ -1,10 +1,12 @@
 import Fastify from "fastify";
 import cors from "@fastify/cors";
 
+import { env } from "./platform/config/env.js";
 import { systemClock, type Clock } from "./shared/clock.js";
 import { uuidGenerator, type IdGenerator } from "./shared/ids.js";
 import { prisma } from "./platform/db/client.js";
 import { errorHandler } from "./platform/http/errorHandler.js";
+import { buildLoggerOptions } from "./platform/logging/logger.js";
 import {
   createCatalogModule,
   createPrismaBookRepository,
@@ -33,7 +35,9 @@ export const buildApp = async (overrides: Partial<AppDependencies> = {}) => {
     ...overrides,
   };
 
-  const app = Fastify({ logger: true });
+  const app = Fastify({
+    logger: buildLoggerOptions(env),
+  });
 
   app.setErrorHandler(errorHandler);
 
