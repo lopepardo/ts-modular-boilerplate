@@ -1,7 +1,4 @@
-import type {
-  Example,
-  ExampleRepository,
-} from "../application/exampleRepository.js";
+import type { Example, ExampleRepository } from "../application/exampleRepository.js";
 
 /**
  * The template owns no table yet, so it ships an in-memory implementation.

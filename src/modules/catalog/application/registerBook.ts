@@ -13,10 +13,7 @@ export type RegisterBook = (input: {
 }) => Promise<Book>;
 
 /** Every registration creates a new Book, even for an ISBN already present. */
-export const registerBookUseCase = ({
-  repository,
-  generateId,
-}: CatalogDeps): RegisterBook => {
+export const registerBookUseCase = ({ repository, generateId }: CatalogDeps): RegisterBook => {
   return (input) => {
     const id = generateId();
     return repository.save({ id, ...input, retired: false });

@@ -2,11 +2,7 @@ import Fastify from "fastify";
 import { afterAll, describe, expect, it } from "vitest";
 
 import { errorHandler } from "../src/platform/http/errorHandler.js";
-import {
-  BusinessError,
-  ConflictError,
-  NotFoundError,
-} from "../src/shared/errors.js";
+import { BusinessError, ConflictError, NotFoundError } from "../src/shared/errors.js";
 
 type ErrorBody = { error: { code: string } };
 

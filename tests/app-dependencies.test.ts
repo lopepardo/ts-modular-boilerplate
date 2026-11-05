@@ -3,8 +3,7 @@ import { afterAll, describe, expect, it, vi } from "vitest";
 vi.mock("../src/platform/db/client.js", () => ({ prisma: {} }));
 
 const { buildApp } = await import("../src/app.js");
-const { createInMemoryBookRepository } =
-  await import("../src/modules/catalog/index.js");
+const { createInMemoryBookRepository } = await import("../src/modules/catalog/index.js");
 
 type ErrorBody = { error: Record<string, unknown> };
 

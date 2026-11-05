@@ -20,8 +20,7 @@ const internalsOf = (name) => ({
 /** `application` and `domain` stay independent of Fastify/Prisma adapters. */
 const adapterLayers = {
   group: ["**/http", "**/http/**", "**/infra", "**/infra/**"],
-  message:
-    "application and domain code must not import from http or infra. See ADR 0001.",
+  message: "application and domain code must not import from http or infra. See ADR 0001.",
 };
 
 const boundaryConfigs = modules.flatMap((name) => {
@@ -32,10 +31,7 @@ const boundaryConfigs = modules.flatMap((name) => {
       rules: restrict(...others),
     },
     {
-      files: [
-        `src/modules/${name}/application/**/*.ts`,
-        `src/modules/${name}/domain/**/*.ts`,
-      ],
+      files: [`src/modules/${name}/application/**/*.ts`, `src/modules/${name}/domain/**/*.ts`],
       rules: restrict(...others, adapterLayers),
     },
   ];
@@ -66,10 +62,7 @@ export default [
     rules: {
       "@typescript-eslint/no-explicit-any": "error",
       "@typescript-eslint/consistent-type-definitions": ["error", "type"],
-      "@typescript-eslint/no-unused-vars": [
-        "error",
-        { argsIgnorePattern: "^_" },
-      ],
+      "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
       "@typescript-eslint/require-await": "off",
     },
   },

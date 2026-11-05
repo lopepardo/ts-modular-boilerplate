@@ -3,15 +3,13 @@ import { afterAll, describe, expect, it, vi } from "vitest";
 vi.mock("../src/platform/db/client.js", () => ({ prisma: {} }));
 
 const { buildApp } = await import("../src/app.js");
-const { createInMemoryBookRepository } =
-  await import("../src/modules/catalog/index.js");
+const { createInMemoryBookRepository } = await import("../src/modules/catalog/index.js");
 
 type ErrorBody = { error: Record<string, unknown> };
 
 let nextId = 0;
 const app = await buildApp({
-  generateId: () =>
-    `00000000-0000-4000-8000-${String(++nextId).padStart(12, "0")}`,
+  generateId: () => `00000000-0000-4000-8000-${String(++nextId).padStart(12, "0")}`,
   bookRepository: createInMemoryBookRepository(),
 });
 
@@ -39,9 +37,9 @@ describe("catalog: register and view a book", () => {
   });
 
   it("views a registered book with its details and retired state", async () => {
-    const created = (
-      await register({ title: "Emma", author: "Jane Austen", isbn: "111" })
-    ).json<{ id: string }>();
+    const created = (await register({ title: "Emma", author: "Jane Austen", isbn: "111" })).json<{
+      id: string;
+    }>();
 
     const res = await app.inject({
       method: "GET",
