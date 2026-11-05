@@ -1,0 +1,16 @@
+info:
+  name: Get book
+  type: http
+  seq: 2
+
+http:
+  method: GET
+  url: "{{baseUrl}}/books/14aff8ea-2a56-4537-8e5b-ca9a8c6c8894"
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

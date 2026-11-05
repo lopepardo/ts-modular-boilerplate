@@ -68,20 +68,20 @@ describe("catalog: register and view a book", () => {
     });
   });
 
-  it("returns 422 VALIDATION_ERROR for invalid input", async () => {
+  it("returns 400 VALIDATION_ERROR for invalid input", async () => {
     const res = await register({ title: " ", author: "A" });
 
-    expect(res.statusCode).toBe(422);
+    expect(res.statusCode).toBe(400);
     expect(res.json<ErrorBody>().error).toMatchObject({
       code: "VALIDATION_ERROR",
-      details: {
-        title: expect.any(Array) as unknown,
-        isbn: expect.any(Array) as unknown,
-      },
+      details: expect.arrayContaining([
+        expect.objectContaining({ path: "title" }),
+        expect.objectContaining({ path: "isbn" }),
+      ]) as unknown,
     });
 
     const badId = await app.inject({ method: "GET", url: "/books/abc" });
-    expect(badId.statusCode).toBe(422);
+    expect(badId.statusCode).toBe(400);
   });
 
   it("registers two books with the same ISBN as two distinct Books", async () => {

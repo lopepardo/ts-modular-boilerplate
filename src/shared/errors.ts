@@ -18,3 +18,9 @@ export class NotFoundError extends BusinessError {}
 
 /** The operation conflicts with the current state of a resource. */
 export class ConflictError extends BusinessError {}
+
+/** The caller is not authenticated (missing or invalid credentials). */
+export class UnauthorizedError extends BusinessError {}
+
+/** The caller is authenticated but not allowed to perform the operation. */
+export class ForbiddenError extends BusinessError {}

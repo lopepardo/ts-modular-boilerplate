@@ -53,13 +53,13 @@ describe("app dependency overrides", () => {
     });
   });
 
-  it("returns 422 VALIDATION_ERROR with details for invalid input", async () => {
+  it("returns 400 VALIDATION_ERROR with details for invalid input", async () => {
     const res = await app.inject({ method: "GET", url: "/books/abc" });
 
-    expect(res.statusCode).toBe(422);
+    expect(res.statusCode).toBe(400);
     expect(res.json<ErrorBody>().error).toMatchObject({
       code: "VALIDATION_ERROR",
-      details: { id: expect.any(Array) as unknown },
+      details: [{ path: "id", message: expect.any(String) as unknown }],
     });
   });
 });

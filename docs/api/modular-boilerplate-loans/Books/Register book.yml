@@ -1,0 +1,24 @@
+info:
+  name: Register book
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{baseUrl}}/books"
+  body:
+    type: json
+    data: |-
+      {
+        "title": "Atomic Habits",
+        "author": "James Clear",
+        "isbn": "978-0735211292"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

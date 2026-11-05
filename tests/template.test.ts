@@ -23,17 +23,17 @@ describe("POST /_template", () => {
     expect(res.json()).toEqual({ id: FIXED_ID, name: "First example" });
   });
 
-  it("returns 422 VALIDATION_ERROR for an empty name", async () => {
+  it("returns 400 VALIDATION_ERROR for an empty name", async () => {
     const res = await app.inject({
       method: "POST",
       url: "/_template",
       payload: { name: "   " },
     });
 
-    expect(res.statusCode).toBe(422);
+    expect(res.statusCode).toBe(400);
     expect(res.json<ErrorBody>().error).toMatchObject({
       code: "VALIDATION_ERROR",
-      details: { name: expect.any(Array) as unknown },
+      details: [{ path: "name", message: expect.any(String) as unknown }],
     });
   });
 });
