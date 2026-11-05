@@ -1,10 +1,9 @@
-import { afterAll, describe, expect, it, vi } from "vitest";
+import { afterAll, describe, expect, it } from "vitest";
 
-vi.mock("../src/platform/db/client.js", () => ({ prisma: {} }));
+import { buildApp } from "../src/app.js";
+import { fakePrisma } from "./support/fakePrisma.js";
 
-const { buildApp } = await import("../src/app.js");
-
-const app = await buildApp();
+const app = await buildApp({ prisma: fakePrisma });
 
 describe("GET /health", () => {
   afterAll(() => app.close());

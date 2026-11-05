@@ -1,13 +1,21 @@
-import { afterAll, describe, expect, it, vi } from "vitest";
+import { afterAll, describe, expect, it } from "vitest";
 
-vi.mock("../src/platform/db/client.js", () => ({ prisma: {} }));
-
-const { buildApp } = await import("../src/app.js");
+import {
+  createInMemoryExampleRepository,
+  createTemplateModule,
+} from "../src/modules/_template/index.js";
+import { createServer } from "../src/platform/http/createServer.js";
 
 const FIXED_ID = "0b9f3a52-6c1e-4f7e-9d3a-2f6b8a1c4e10";
 type ErrorBody = { error: Record<string, unknown> };
 
-const app = await buildApp({ generateId: () => FIXED_ID });
+// `_template` is not mounted by `buildApp`: the test wires it onto a bare server.
+const app = await createServer();
+const template = createTemplateModule({
+  repository: createInMemoryExampleRepository(),
+  generateId: () => FIXED_ID,
+});
+await app.register(template.routes, { prefix: "/_template" });
 
 describe("POST /_template", () => {
   afterAll(() => app.close());

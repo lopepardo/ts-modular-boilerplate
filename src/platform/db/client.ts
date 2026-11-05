@@ -1,19 +1,24 @@
 import { PrismaPg } from "@prisma/adapter-pg";
-import { env } from "../config/env.js";
+import type { AppConfig } from "../config/env.js";
 import { PrismaClient } from "./generated/client.js";
 
-const adapter = new PrismaPg({
-  host: env.DB_HOST,
-  port: env.DB_PORT,
-  user: env.DB_USER,
-  password: env.DB_PASSWORD,
-  database: env.DB_NAME,
-  ssl: env.DB_SSL,
-  max: env.DB_POOL_MAX,
-  min: env.DB_POOL_MIN,
-  idleTimeoutMillis: env.DB_POOL_IDLE_TIMEOUT_MS,
-  connectionTimeoutMillis: env.DB_POOL_CONNECTION_TIMEOUT_MS,
-  maxLifetimeSeconds: env.DB_POOL_MAX_LIFETIME_SECONDS,
-});
+export type { PrismaClient };
 
-export const prisma = new PrismaClient({ adapter });
+/** Builds the Prisma client. Only `main.ts` calls it; everyone else receives it. */
+export const createPrismaClient = (config: AppConfig): PrismaClient => {
+  const adapter = new PrismaPg({
+    host: config.DB_HOST,
+    port: config.DB_PORT,
+    user: config.DB_USER,
+    password: config.DB_PASSWORD,
+    database: config.DB_NAME,
+    ssl: config.DB_SSL,
+    max: config.DB_POOL_MAX,
+    min: config.DB_POOL_MIN,
+    idleTimeoutMillis: config.DB_POOL_IDLE_TIMEOUT_MS,
+    connectionTimeoutMillis: config.DB_POOL_CONNECTION_TIMEOUT_MS,
+    maxLifetimeSeconds: config.DB_POOL_MAX_LIFETIME_SECONDS,
+  });
+
+  return new PrismaClient({ adapter });
+};

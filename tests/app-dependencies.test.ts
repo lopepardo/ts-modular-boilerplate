@@ -1,18 +1,17 @@
-import { afterAll, describe, expect, it, vi } from "vitest";
+import { afterAll, describe, expect, it } from "vitest";
 
-vi.mock("../src/platform/db/client.js", () => ({ prisma: {} }));
-
-const { buildApp } = await import("../src/app.js");
-const { createInMemoryBookRepository } = await import("../src/modules/catalog/index.js");
+import { buildApp } from "../src/app.js";
+import { fakePrisma } from "./support/fakePrisma.js";
+import { createInMemoryBookRepository } from "../src/modules/catalog/index.js";
 
 type ErrorBody = { error: Record<string, unknown> };
 
 const FIXED_ID = "0b9f3a52-6c1e-4f7e-9d3a-2f6b8a1c4e10";
 
 const app = await buildApp({
-  clock: { now: () => new Date("2026-11-04T12:00:00.000Z") },
+  prisma: fakePrisma,
   generateId: () => FIXED_ID,
-  bookRepository: createInMemoryBookRepository(),
+  catalog: { repository: createInMemoryBookRepository() },
 });
 
 describe("app dependency overrides", () => {

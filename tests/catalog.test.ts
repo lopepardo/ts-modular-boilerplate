@@ -1,16 +1,16 @@
-import { afterAll, describe, expect, it, vi } from "vitest";
+import { afterAll, describe, expect, it } from "vitest";
 
-vi.mock("../src/platform/db/client.js", () => ({ prisma: {} }));
-
-const { buildApp } = await import("../src/app.js");
-const { createInMemoryBookRepository } = await import("../src/modules/catalog/index.js");
+import { buildApp } from "../src/app.js";
+import { fakePrisma } from "./support/fakePrisma.js";
+import { createInMemoryBookRepository } from "../src/modules/catalog/index.js";
 
 type ErrorBody = { error: Record<string, unknown> };
 
 let nextId = 0;
 const app = await buildApp({
+  prisma: fakePrisma,
   generateId: () => `00000000-0000-4000-8000-${String(++nextId).padStart(12, "0")}`,
-  bookRepository: createInMemoryBookRepository(),
+  catalog: { repository: createInMemoryBookRepository() },
 });
 
 const register = (payload: Record<string, unknown>) =>

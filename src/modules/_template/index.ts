@@ -17,7 +17,7 @@ export type TemplateModule = {
 };
 
 /**
- * Public entry point: the only file other modules (and `app.ts`) may import.
+ * Public entry point: the only file other modules may import. `app.ts` does not mount it.
  * Copy this folder, rename it and adapt what is exported.
  */
 export const createTemplateModule = (deps: CreateExampleDeps): TemplateModule => {
