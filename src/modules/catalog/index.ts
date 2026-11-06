@@ -6,6 +6,7 @@ import { registerBookUseCase, type RegisterBook } from "./application/useCases/r
 import { bookRoutes } from "./http/routes.js";
 
 export type { BookRepository } from "./application/ports/bookRepository.js";
+export type { Book } from "./domain/book.js";
 export { createInMemoryBookRepository } from "./infra/inMemoryBookRepository.js";
 export { createPrismaBookRepository } from "./infra/prismaBookRepository.js";
 
