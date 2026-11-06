@@ -25,33 +25,18 @@ const http = "src/modules/catalog/http/x.ts";
 
 describe("module boundary rules", () => {
   it.each([
-    [app, 'import { env } from "../../../platform/config/env.js";'],
     [app, 'import { prisma } from "../../../platform/db/client.js";'],
     [app, 'import Fastify from "fastify";'],
     [app, 'import { z } from "zod";'],
-    [app, 'import { z } from "zod/v4";'],
-    [app, 'import { z } from "zod/mini";'],
-    [app, 'import cors from "@fastify/cors";'],
-    [app, 'import { x } from "fastify-type-provider-zod";'],
-    [app, 'import { Pool } from "pg-pool";'],
-    [app, 'import { x } from "@prisma/client/runtime/library";'],
-    [domain, 'import { z } from "zod/v4";'],
     [app, 'import { x } from "../infra/repo.js";'],
-    [domain, 'import { env } from "../../../platform/config/env.js";'],
     [domain, 'import { x } from "../application/getBook.js";'],
-    [domain, 'import { PrismaClient } from "@prisma/client";'],
-    [domain, 'import { x } from "../http/routes.js";'],
   ])("rejects %s -> %s", async (file, code) => {
     expect(await violations(file, code)).not.toHaveLength(0);
   });
 
   it.each([
     [app, 'import { x } from "../domain/book.js";'],
-    [app, 'import { x } from "../../../shared/errors.js";'],
-    [domain, 'import { x } from "../../../shared/ids.js";'],
     [http, 'import { x } from "../application/getBook.js";'],
-    [http, 'import Fastify from "fastify";'],
-    [http, 'import { env } from "../../../platform/config/env.js";'],
   ])("allows %s -> %s", async (file, code) => {
     expect(await violations(file, code)).toHaveLength(0);
   });

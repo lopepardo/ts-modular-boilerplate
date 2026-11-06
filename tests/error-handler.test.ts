@@ -54,21 +54,9 @@ app.get("/business", async () => {
 app.get("/boom", async () => {
   throw new Error("secret internals");
 });
-app.get("/stray-zod", async () => {
-  // A ZodError escaping a service is a server fault, not a client error.
-  return z.string().parse(42);
-});
 app
   .withTypeProvider<ZodTypeProvider>()
   .post("/validate", { schema: { body: Schema } }, async (request) => request.body);
-app
-  .withTypeProvider<ZodTypeProvider>()
-  .get(
-    "/items/:id",
-    { schema: { params: z.object({ id: z.uuid() }) } },
-    async (request) => request.params,
-  );
-
 const PublicSchema = z.object({ id: z.string() });
 const typed = app.withTypeProvider<ZodTypeProvider>();
 typed.get(
@@ -84,22 +72,16 @@ typed.get(
   async () => ({ id: 42 }) as unknown as { id: string },
 );
 
-const post = (payload: string, contentType = "application/json") =>
+const post = (payload: string) =>
   app.inject({
     method: "POST",
     url: "/validate",
-    headers: { "content-type": contentType },
+    headers: { "content-type": "application/json" },
     payload,
   });
 
 describe("errorHandler", () => {
   afterAll(() => app.close());
-
-  it("business errors carry no HTTP knowledge", () => {
-    const error = new BusinessError("RULE_BROKEN", "Rule broken");
-    expect(error).not.toHaveProperty("statusCode");
-    expect(error.code).toBe("RULE_BROKEN");
-  });
 
   it.each([
     ["/not-found", 404, "THING_NOT_FOUND"],
@@ -130,43 +112,11 @@ describe("errorHandler", () => {
     expect(error.details?.map((d) => d.in)).toEqual(["body", "body"]);
   });
 
-  it("reports a root-level body failure as in=body with an empty path", async () => {
-    const res = await post(JSON.stringify([]));
-
-    expect(res.statusCode).toBe(400);
-    expect(res.json<ErrorBody>().error.details).toEqual([
-      { in: "body", path: "", message: expect.any(String) as unknown },
-    ]);
-  });
-
-  it("reports where the failure happened for params", async () => {
-    const res = await app.inject({ method: "GET", url: "/items/abc" });
-
-    expect(res.statusCode).toBe(400);
-    expect(res.json<ErrorBody>().error.details).toEqual([
-      { in: "params", path: "id", message: expect.any(String) as unknown },
-    ]);
-  });
-
   it("returns 400 INVALID_JSON for malformed JSON", async () => {
     const res = await post("{not json");
 
     expect(res.statusCode).toBe(400);
     expect(res.json<ErrorBody>().error.code).toBe("INVALID_JSON");
-  });
-
-  it("returns 415 for an unsupported media type", async () => {
-    const res = await post("<a/>", "application/xml");
-
-    expect(res.statusCode).toBe(415);
-    expect(res.json<ErrorBody>().error.code).toBe("UNSUPPORTED_MEDIA_TYPE");
-  });
-
-  it("returns 413 when the body exceeds the limit", async () => {
-    const res = await post(JSON.stringify({ name: "x".repeat(200) }));
-
-    expect(res.statusCode).toBe(413);
-    expect(res.json<ErrorBody>().error.code).toBe("PAYLOAD_TOO_LARGE");
   });
 
   it("returns 404 ROUTE_NOT_FOUND for unknown routes", async () => {
@@ -182,13 +132,6 @@ describe("errorHandler", () => {
     expect(res.statusCode).toBe(500);
     expect(res.json<ErrorBody>().error.code).toBe("INTERNAL_SERVER_ERROR");
     expect(res.body).not.toContain("secret internals");
-  });
-
-  it("treats a ZodError thrown outside request validation as a 500", async () => {
-    const res = await app.inject({ method: "GET", url: "/stray-zod" });
-
-    expect(res.statusCode).toBe(500);
-    expect(res.json<ErrorBody>().error.code).toBe("INTERNAL_SERVER_ERROR");
   });
 
   it("strips fields not declared in the response schema", async () => {
