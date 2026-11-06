@@ -62,6 +62,21 @@ app
   .withTypeProvider<ZodTypeProvider>()
   .post("/validate", { schema: { body: Schema } }, async (request) => request.body);
 
+const PublicSchema = z.object({ id: z.string() });
+const typed = app.withTypeProvider<ZodTypeProvider>();
+typed.get(
+  "/strips-extra-fields",
+  { schema: { response: { 200: PublicSchema } } },
+  // Cast: the compiler would reject this, which is exactly what we simulate
+  // (a handler that bypasses the presenter).
+  async () => ({ id: "1", secret: "internal" }) as { id: string },
+);
+typed.get(
+  "/bad-response",
+  { schema: { response: { 200: PublicSchema } } },
+  async () => ({ id: 42 }) as unknown as { id: string },
+);
+
 const post = (payload: string, contentType = "application/json") =>
   app.inject({
     method: "POST",
@@ -148,5 +163,26 @@ describe("errorHandler", () => {
 
     expect(res.statusCode).toBe(500);
     expect(res.json<ErrorBody>().error.code).toBe("INTERNAL_SERVER_ERROR");
+  });
+
+  it("strips fields not declared in the response schema", async () => {
+    const res = await app.inject({ method: "GET", url: "/strips-extra-fields" });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({ id: "1" });
+    expect(res.body).not.toContain("internal");
+  });
+
+  it("returns a generic 500 when the response does not match its schema", async () => {
+    const res = await app.inject({ method: "GET", url: "/bad-response" });
+
+    expect(res.statusCode).toBe(500);
+    expect(res.json<ErrorBody>()).toEqual({
+      error: {
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Unexpected server error",
+        traceId: expect.any(String) as unknown,
+      },
+    });
   });
 });

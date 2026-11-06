@@ -1,6 +1,6 @@
 import cors from "@fastify/cors";
 import Fastify from "fastify";
-import { validatorCompiler } from "fastify-type-provider-zod";
+import { serializerCompiler, validatorCompiler } from "fastify-type-provider-zod";
 
 import type { AppConfig } from "../config/env.js";
 import { buildLoggerOptions } from "../logging/logger.js";
@@ -15,13 +15,13 @@ export const createServer = async (config: ServerConfig) => {
     logger: buildLoggerOptions(config),
   });
 
-  // Zod validates requests from each route's `schema`.
+  // Zod validates requests and serializes responses from each route's `schema`.
   app.setValidatorCompiler(validatorCompiler);
-  // app.setSerializerCompiler(serializerCompiler);
+  app.setSerializerCompiler(serializerCompiler);
 
   // TODO: OpenAPI docs: register @fastify/swagger with
   // `transform: jsonSchemaTransform` (fastify-type-provider-zod) before routes,
-  // and declare `response` schemas (success + errors) on each route.
+  // and declare error `response` schemas (4xx/5xx) on each route.
 
   app.setErrorHandler(errorHandler);
   app.setNotFoundHandler(notFoundHandler);
