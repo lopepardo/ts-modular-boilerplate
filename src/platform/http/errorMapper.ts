@@ -8,7 +8,13 @@ import {
   UnauthorizedError,
 } from "../../shared/errors.js";
 
-export type ErrorDetail = { path: string; message: string };
+const VALIDATION_LOCATIONS = ["body", "params", "querystring", "headers"] as const;
+
+export type ErrorDetail = {
+  in: (typeof VALIDATION_LOCATIONS)[number];
+  path: string;
+  message: string;
+};
 
 export type ErrorResponse = {
   status: number;
@@ -72,14 +78,22 @@ const readFastifyError = (error: unknown): { code?: string; statusCode?: number 
   };
 };
 
+/** Where Fastify says the validation failed; defaults to the body. */
+const readValidationLocation = (error: object): ErrorDetail["in"] => {
+  const { validationContext } = error as Record<string, unknown>;
+  return VALIDATION_LOCATIONS.find((l) => l === validationContext) ?? "body";
+};
+
 /** Pure: turns anything that was thrown into the public error contract. */
 export const toErrorResponse = (error: unknown): ErrorResponse => {
   if (hasZodFastifySchemaValidationErrors(error)) {
+    const location = readValidationLocation(error);
     return {
       status: 400,
       code: "VALIDATION_ERROR",
       message: "Invalid request data",
       details: error.validation.map((issue) => ({
+        in: location,
         // "/tags/0/label" -> "tags.0.label"
         path: issue.instancePath.replace(/^\//, "").split("/").join("."),
         message: issue.message ?? "Invalid value",

@@ -77,8 +77,8 @@ describe("catalog: register and view a book", () => {
     expect(res.json<ErrorBody>().error).toMatchObject({
       code: "VALIDATION_ERROR",
       details: expect.arrayContaining([
-        expect.objectContaining({ path: "title" }),
-        expect.objectContaining({ path: "isbn" }),
+        expect.objectContaining({ in: "body", path: "title" }),
+        expect.objectContaining({ in: "body", path: "isbn" }),
       ]) as unknown,
     });
 

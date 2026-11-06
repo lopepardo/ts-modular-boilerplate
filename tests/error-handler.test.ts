@@ -22,7 +22,7 @@ type ErrorBody = {
     code: string;
     message: string;
     traceId: string;
-    details?: { path: string; message: string }[];
+    details?: { in: string; path: string; message: string }[];
   };
 };
 
@@ -61,6 +61,13 @@ app.get("/stray-zod", async () => {
 app
   .withTypeProvider<ZodTypeProvider>()
   .post("/validate", { schema: { body: Schema } }, async (request) => request.body);
+app
+  .withTypeProvider<ZodTypeProvider>()
+  .get(
+    "/items/:id",
+    { schema: { params: z.object({ id: z.uuid() }) } },
+    async (request) => request.params,
+  );
 
 const PublicSchema = z.object({ id: z.string() });
 const typed = app.withTypeProvider<ZodTypeProvider>();
@@ -120,6 +127,25 @@ describe("errorHandler", () => {
     const { error } = res.json<ErrorBody>();
     expect(error.code).toBe("VALIDATION_ERROR");
     expect(error.details?.map((d) => d.path)).toEqual(["name", "tags.0.label"]);
+    expect(error.details?.map((d) => d.in)).toEqual(["body", "body"]);
+  });
+
+  it("reports a root-level body failure as in=body with an empty path", async () => {
+    const res = await post(JSON.stringify([]));
+
+    expect(res.statusCode).toBe(400);
+    expect(res.json<ErrorBody>().error.details).toEqual([
+      { in: "body", path: "", message: expect.any(String) as unknown },
+    ]);
+  });
+
+  it("reports where the failure happened for params", async () => {
+    const res = await app.inject({ method: "GET", url: "/items/abc" });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.json<ErrorBody>().error.details).toEqual([
+      { in: "params", path: "id", message: expect.any(String) as unknown },
+    ]);
   });
 
   it("returns 400 INVALID_JSON for malformed JSON", async () => {

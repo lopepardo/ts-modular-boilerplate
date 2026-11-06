@@ -1,6 +1,6 @@
 # Library API
 
-Invalid input (body, query or params) returns `400` `VALIDATION_ERROR` with `details`. Business-rule failures use `404`, `409` or `422` with a specific `code`. Every error has the shape `{ "error": { "code", "message", "traceId" } }`.
+Invalid input (body, query or params) returns `400` `VALIDATION_ERROR` with `details`, a list of `{ "in", "path", "message" }` where `in` is `body`, `params`, `querystring` or `headers` and `path` is the dotted field path (empty when the whole `in` value is invalid, e.g. a body that is an array). Business-rule failures use `404`, `409` or `422` with a specific `code`. Every error has the shape `{ "error": { "code", "message", "traceId" } }`.
 
 ## Endpoints
 

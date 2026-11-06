@@ -60,7 +60,7 @@ describe("app dependency overrides", () => {
     expect(res.statusCode).toBe(400);
     expect(res.json<ErrorBody>().error).toMatchObject({
       code: "VALIDATION_ERROR",
-      details: [{ path: "id", message: expect.any(String) as unknown }],
+      details: [{ in: "params", path: "id", message: expect.any(String) as unknown }],
     });
   });
 });

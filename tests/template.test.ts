@@ -42,7 +42,7 @@ describe("POST /_template", () => {
     expect(res.statusCode).toBe(400);
     expect(res.json<ErrorBody>().error).toMatchObject({
       code: "VALIDATION_ERROR",
-      details: [{ path: "name", message: expect.any(String) as unknown }],
+      details: [{ in: "body", path: "name", message: expect.any(String) as unknown }],
     });
   });
 });
