@@ -4,7 +4,7 @@ description: REST conventions for this modular API (routes, JSON shape, validati
 disable-model-invocation: true
 ---
 
-Reference implementation: `src/modules/catalog/` (`http/routes.ts`, `application/registerBook.ts`, `index.ts`), wired in `src/app.ts`. Starting point for a new module: `src/modules/_template/`. Public contract: `docs/api.md`.
+Reference implementation: `src/modules/catalog/` (`http/routes.ts`, `application/useCases/registerBook.ts`, `index.ts`), wired in `src/app.ts`. Starting point for a new module: `src/modules/_template/`. Public contract: `docs/api.md`.
 
 ## Naming
 
@@ -17,7 +17,7 @@ Reference implementation: `src/modules/catalog/` (`http/routes.ts`, `application
 ## Layers (per module)
 
 - `http/`: Fastify routes, Zod schemas for body/query/params (via `ZodTypeProvider`), and presenters (e.g. `presentBook`) to map the entity to the public shape. Let errors propagate; never `try/catch` to format responses.
-- `application/`: use cases as factory functions that receive their dependencies, plus the repository interface. No Fastify, Zod or Prisma imports.
+- `application/`: `useCases/` (factory functions that receive their dependencies), `ports/` (repository interfaces) and `deps.ts` (the module's dependency type). Entities live in `domain/`. No Fastify, Zod or Prisma imports.
 - `domain/`: entities and rules, only once the module has real invariants.
 - `infra/`: Prisma and in-memory repository implementations.
 - `index.ts`: the module's only public entry point; other modules import nothing else.

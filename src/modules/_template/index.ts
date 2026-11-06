@@ -1,13 +1,10 @@
 import type { FastifyPluginAsync } from "fastify";
 
-import {
-  createExampleUseCase,
-  type CreateExample,
-  type CreateExampleDeps,
-} from "./application/createExample.js";
+import type { TemplateDeps } from "./application/deps.js";
+import { createExampleUseCase, type CreateExample } from "./application/useCases/createExample.js";
 import { exampleRoutes } from "./http/routes.js";
 
-export type { Example, ExampleRepository } from "./application/exampleRepository.js";
+export type { ExampleRepository } from "./application/ports/exampleRepository.js";
 export { createInMemoryExampleRepository } from "./infra/inMemoryExampleRepository.js";
 
 export type TemplateModule = {
@@ -20,7 +17,7 @@ export type TemplateModule = {
  * Public entry point: the only file other modules may import. `app.ts` does not mount it.
  * Copy this folder, rename it and adapt what is exported.
  */
-export const createTemplateModule = (deps: CreateExampleDeps): TemplateModule => {
+export const createTemplateModule = (deps: TemplateDeps): TemplateModule => {
   const createExample = createExampleUseCase(deps);
   return { routes: exampleRoutes({ createExample }), createExample };
 };

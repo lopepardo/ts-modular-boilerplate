@@ -1,4 +1,4 @@
-import type { Example } from "../application/exampleRepository.js";
+import type { Example } from "../domain/example.js";
 import type { ExampleResponse } from "./schemas.js";
 
 /** Maps the domain entity to the public DTO. */

@@ -1,4 +1,4 @@
-import type { Book } from "../application/bookRepository.js";
+import type { Book } from "../domain/book.js";
 import type { BookResponse } from "./schemas.js";
 
 /** Maps the domain entity to the public DTO. */

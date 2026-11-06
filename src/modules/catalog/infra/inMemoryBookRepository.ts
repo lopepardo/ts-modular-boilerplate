@@ -1,4 +1,5 @@
-import type { Book, BookRepository } from "../application/bookRepository.js";
+import type { Book } from "../domain/book.js";
+import type { BookRepository } from "../application/ports/bookRepository.js";
 
 export const createInMemoryBookRepository = (): BookRepository => {
   const store = new Map<string, Book>();

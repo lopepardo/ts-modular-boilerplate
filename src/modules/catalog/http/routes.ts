@@ -1,8 +1,8 @@
 import type { FastifyPluginAsync } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 
-import type { GetBook } from "../application/getBook.js";
-import type { RegisterBook } from "../application/registerBook.js";
+import type { GetBook } from "../application/useCases/getBook.js";
+import type { RegisterBook } from "../application/useCases/registerBook.js";
 import { presentBook } from "./presenters.js";
 import { BookParamsSchema, BookResponseSchema, NewBookSchema } from "./schemas.js";
 

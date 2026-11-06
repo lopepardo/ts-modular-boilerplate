@@ -1,10 +1,5 @@
-import type { IdGenerator } from "../../../shared/ids.js";
-import type { Book, BookRepository } from "./bookRepository.js";
-
-export type CatalogDeps = {
-  repository: BookRepository;
-  generateId: IdGenerator;
-};
+import type { Book } from "../../domain/book.js";
+import type { CatalogDeps } from "../deps.js";
 
 export type RegisterBook = (input: {
   title: string;
@@ -13,7 +8,10 @@ export type RegisterBook = (input: {
 }) => Promise<Book>;
 
 /** Every registration creates a new Book, even for an ISBN already present. */
-export const registerBookUseCase = ({ repository, generateId }: CatalogDeps): RegisterBook => {
+export const registerBookUseCase = ({
+  repository,
+  generateId,
+}: Pick<CatalogDeps, "repository" | "generateId">): RegisterBook => {
   return (input) => {
     const id = generateId();
     return repository.save({ id, ...input, retired: false });

@@ -16,7 +16,7 @@ export const errorHandler = (error: unknown, request: FastifyRequest, reply: Fas
   } else if (status >= 500) {
     request.log.error({ err: error }, "Unhandled error");
   } else {
-    request.log.info({ code, status }, "Request failed");
+    request.log.info({ status, code }, "Request failed");
   }
 
   return reply.code(status).send({

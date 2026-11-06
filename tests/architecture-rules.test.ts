@@ -29,14 +29,14 @@ describe("module boundary rules", () => {
     [app, 'import Fastify from "fastify";'],
     [app, 'import { z } from "zod";'],
     [app, 'import { x } from "../infra/repo.js";'],
-    [domain, 'import { x } from "../application/getBook.js";'],
+    [domain, 'import { x } from "../application/useCases/getBook.js";'],
   ])("rejects %s -> %s", async (file, code) => {
     expect(await violations(file, code)).not.toHaveLength(0);
   });
 
   it.each([
     [app, 'import { x } from "../domain/book.js";'],
-    [http, 'import { x } from "../application/getBook.js";'],
+    [http, 'import { x } from "../application/useCases/getBook.js";'],
   ])("allows %s -> %s", async (file, code) => {
     expect(await violations(file, code)).toHaveLength(0);
   });

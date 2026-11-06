@@ -1,11 +1,4 @@
-/** A physical copy in the catalog (see `CONTEXT.md`). */
-export type Book = {
-  id: string;
-  title: string;
-  author: string;
-  isbn: string;
-  retired: boolean;
-};
+import type { Book } from "../../domain/book.js";
 
 /** Declared by the application layer, implemented in `infra`. */
 export type BookRepository = {

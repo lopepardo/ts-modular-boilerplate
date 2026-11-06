@@ -1,10 +1,11 @@
-import { NotFoundError } from "../../../shared/errors.js";
-import type { Book, BookRepository } from "./bookRepository.js";
+import { NotFoundError } from "../../../../shared/errors.js";
+import type { Book } from "../../domain/book.js";
+import type { CatalogDeps } from "../deps.js";
 
 export type GetBook = (id: string) => Promise<Book>;
 
 export const getBookUseCase =
-  (repository: BookRepository): GetBook =>
+  ({ repository }: Pick<CatalogDeps, "repository">): GetBook =>
   async (id) => {
     const book = await repository.findById(id);
     if (!book) {

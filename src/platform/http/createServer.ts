@@ -1,5 +1,5 @@
-import cors from "@fastify/cors";
 import Fastify from "fastify";
+import cors from "@fastify/cors";
 import { serializerCompiler, validatorCompiler } from "fastify-type-provider-zod";
 
 import type { AppConfig } from "../config/env.js";

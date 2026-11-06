@@ -1,7 +1,7 @@
 import type { FastifyPluginAsync } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 
-import type { CreateExample } from "../application/createExample.js";
+import type { CreateExample } from "../application/useCases/createExample.js";
 import { presentExample } from "./presenters.js";
 import { ExampleResponseSchema, NewExampleSchema } from "./schemas.js";
 
