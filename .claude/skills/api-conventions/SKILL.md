@@ -1,49 +1,53 @@
 ---
 name: api-conventions
-description: REST conventions for the expenses API (routes, JSON shape, validation, error format, layering). Use when creating or modifying endpoints, validations or error responses.
+description: REST conventions for this modular API (routes, JSON shape, validation, error format, module layering). Use when creating or modifying endpoints, validations or error responses.
 disable-model-invocation: true
 ---
 
-Reference implementation: `src/routes/expenses.ts`, `src/controllers/expenses.ts`, `src/services/expenses.ts`. Public contract: `docs/api.md`.
+Reference implementation: `src/modules/catalog/` (`http/routes.ts`, `application/registerBook.ts`, `index.ts`), wired in `src/app.ts`. Starting point for a new module: `src/modules/_template/`. Public contract: `docs/api.md`.
 
 ## Naming
 
-- Domain, fields and error messages in **English** (`expenses`, `amountCents`, `category`).
-- Routes: plural, kebab-case resource (`/expenses`, `/expense-categories`). Register each resource with a `prefix` in `src/app.ts`.
-- JSON in camelCase. Money is always integer **cents** (`amountCents`), never float.
-- Dates in/out are `YYYY-MM-DD`; timestamps (`createdAt`) are ISO 8601. Input dates are parsed to UTC midnight `Date`.
+- Domain, fields and error messages in **English**.
+- Routes: plural, kebab-case resource (`/books`, `/loans`). Register each module's routes with a `prefix` in `src/app.ts`.
+- JSON in camelCase. Money, if any, is always integer **cents**, never float.
+- Dates in/out are `YYYY-MM-DD`; timestamps are ISO 8601.
 - IDs are UUIDs, validated with `z.uuid()`.
 
-## Layers
+## Layers (per module)
 
-- `routes/`: only wires verb + path to a controller.
-- `controllers/`: Zod schemas for body/query/params, plus `present()` to map the DB row to the public shape. Call `.parse()` and let errors propagate; never `try/catch` to format responses.
-- `services/`: business rules and Prisma access; no Fastify imports.
-- With `exactOptionalPropertyTypes`, never pass `undefined` to optional props; use conditional spread (see `listExpenses`).
+- `http/`: Fastify routes, Zod schemas for body/query/params (via `ZodTypeProvider`), and `present()` to map the entity to the public shape. Let errors propagate; never `try/catch` to format responses.
+- `application/`: use cases as factory functions that receive their dependencies, plus the repository interface. No Fastify, Zod or Prisma imports.
+- `domain/`: entities and rules, only once the module has real invariants.
+- `infra/`: Prisma and in-memory repository implementations.
+- `index.ts`: the module's only public entry point; other modules import nothing else.
+- With `exactOptionalPropertyTypes`, never pass `undefined` to optional props; use conditional spread.
 
 ## Status codes
 
 - `POST` create: `201` with the resource. `GET`: `200`. `DELETE`: `204` with no body.
-- Invalid body/query/params: `422` `VALIDATION_ERROR` (handled centrally from `ZodError`, includes `details`).
-- Missing resource: `404` with a specific code, e.g. `EXPENSE_NOT_FOUND`.
+- Invalid body/query/params: `400` `VALIDATION_ERROR` (from schema validation, includes `details`).
+- Missing resource: `404` with a specific code, e.g. `BOOK_NOT_FOUND` (`NotFoundError`).
+- Conflict with current state: `409` (`ConflictError`).
+- Other business-rule failure (plain `BusinessError`): `422`.
 - Anything unexpected: `500` `INTERNAL_SERVER_ERROR`.
 
 ## Errors
 
-Format (built only in `src/handlers/errorHandler.ts`):
+Format (built only in `src/platform/http/errorHandler.ts`, mapped in `errorMapper.ts`):
 
 ```json
-{ "error": { "code": "EXPENSE_NOT_FOUND", "message": "...", "traceId": "..." } }
+{ "error": { "code": "BOOK_NOT_FOUND", "message": "...", "traceId": "..." } }
 ```
 
-Business errors are thrown from the service: `throw new AppError(message, status, "UPPER_SNAKE_CODE")`.
+Business errors are thrown from use cases, with no HTTP knowledge: `throw new NotFoundError("BOOK_NOT_FOUND", "Book not found")` (classes in `src/shared/errors.ts`; constructor is `(code, message)`).
 
 ## Listings
 
-Filters are optional query params (`from`, `to`, `category`) validated with Zod. There is no pagination yet; if you add it, document it in `docs/api.md` first, then implement it consistently across listings.
+Filters are optional query params validated with Zod. There is no pagination yet; if you add it, document it in `docs/api.md` first, then implement it consistently across listings.
 
 ## Checklist when changing the API
 
-1. Update `docs/api.md` (routes, fields, error codes).
-2. Add or adjust tests in `tests/` using the `vi.mock` + `app.inject` pattern (no DB).
+1. Update `docs/api.md` (routes, fields, status and error codes).
+2. Add or adjust tests in `tests/` using `buildApp({ config: testConfig, prisma: fakePrisma, <module>: { repository } })` + `app.inject` (no DB). See `tests/catalog.test.ts`.
 3. Run `pnpm typecheck && pnpm lint && pnpm test`.

@@ -6,9 +6,9 @@
 
 **Status:** ready-for-agent
 
-- [ ] The template module is wired into the app builder and its example test passes without a database
-- [ ] `pnpm lint` fails when a module imports another module's internal files
-- [ ] `pnpm lint` fails when `application` or `domain` code imports from `http` or `infra`
-- [ ] Both lint rules are demonstrated to fail on a deliberate violation (then removed)
-- [ ] The template contains no leftovers of the library example domain
-- [ ] `pnpm typecheck && pnpm lint && pnpm test` pass
+- [x] The template module is wired into the app builder and its example test passes without a database
+- [x] `pnpm lint` fails when a module imports another module's internal files
+- [x] `pnpm lint` fails when `application` or `domain` code imports from `http` or `infra`
+- [x] Both lint rules are demonstrated to fail on a deliberate violation (then removed)
+- [x] The template contains no leftovers of the library example domain
+- [x] `pnpm typecheck && pnpm lint && pnpm test` pass

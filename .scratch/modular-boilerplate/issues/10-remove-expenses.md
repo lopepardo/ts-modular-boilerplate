@@ -6,8 +6,8 @@
 
 **Status:** ready-for-agent
 
-- [ ] No `expenses` code, tests, table or migration remains
-- [ ] The migration history applies cleanly from an empty database and creates the `catalog` tables
-- [ ] `/health` and all `catalog` scenarios remain green
-- [ ] No references to expenses remain in code or config (documentation is handled in ticket 11)
-- [ ] `pnpm typecheck && pnpm lint && pnpm test` pass
+- [x] No `expenses` code, tests, table or migration remains
+- [x] The migration history applies cleanly from an empty database and creates the `catalog` tables
+- [x] `/health` and all `catalog` scenarios remain green
+- [x] No references to expenses remain in code or config (documentation is handled in ticket 11)
+- [x] `pnpm typecheck && pnpm lint && pnpm test` pass

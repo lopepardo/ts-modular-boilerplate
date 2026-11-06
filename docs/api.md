@@ -1,4 +1,6 @@
-# Expenses API
+# Library API
+
+Invalid input (body, query or params) returns `400` `VALIDATION_ERROR` with `details`. Business-rule failures use `404`, `409` or `422` with a specific `code`. Every error has the shape `{ "error": { "code", "message", "traceId" } }`.
 
 ## Endpoints
 
@@ -16,12 +18,16 @@ Registers a Book. Body: `{ "title", "author", "isbn" }` (non-empty strings, trim
 }
 ```
 
-Responses: `201` book · `422` `VALIDATION_ERROR`.
+Responses: `201` book · `400` `VALIDATION_ERROR`.
 
 ### `GET /books/:id`
 
-Responses: `200` book (same shape as above) · `422` id is not a uuid · `404` `BOOK_NOT_FOUND`.
+Responses: `200` book (same shape as above) · `400` `VALIDATION_ERROR` (id is not a uuid) · `404` `BOOK_NOT_FOUND`.
 
 ### `GET /health`
 
 Responses: `200` `{ "status": "ok" }`.
+
+## Pending
+
+TODO: document these endpoints once they are implemented (see `.scratch/modular-boilerplate/issues/`): `GET /books`, `POST /books/:id/retire`, and the `lending` module (`POST /loans`, `GET /loans`, `GET /loans/:id`, `POST /loans/:id/return`).

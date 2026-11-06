@@ -6,11 +6,11 @@
 
 **Status:** ready-for-agent
 
-- [ ] Registering a book returns it with an id and is not retired
-- [ ] Viewing an existing book returns its details and retired state
-- [ ] Viewing an unknown book returns a not-found business error mapped to 404
-- [ ] Invalid input returns 422 `VALIDATION_ERROR`
-- [ ] Registering two books with the same ISBN creates two distinct Books
-- [ ] Scenarios run through `app.inject` with in-memory repositories and no database
-- [ ] The multi-file Prisma schema and `catalog` migration apply cleanly
-- [ ] `pnpm typecheck && pnpm lint && pnpm test` pass
+- [x] Registering a book returns it with an id and is not retired
+- [x] Viewing an existing book returns its details and retired state
+- [x] Viewing an unknown book returns a not-found business error mapped to 404
+- [x] Invalid input returns 400 `VALIDATION_ERROR`
+- [x] Registering two books with the same ISBN creates two distinct Books
+- [x] Scenarios run through `app.inject` with in-memory repositories and no database
+- [x] The multi-file Prisma schema and `catalog` migration apply cleanly
+- [x] `pnpm typecheck && pnpm lint && pnpm test` pass

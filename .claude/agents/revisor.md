@@ -13,11 +13,12 @@ Report only:
 3. Probable bugs, with `file:line`.
 4. Changes outside the scope of the task.
 5. Violations of the project rules in `CLAUDE.md`, such as:
-   - amounts as floats instead of integer cents;
-   - `try/catch` in controllers, or business errors not thrown as `AppError`;
-   - Prisma or Fastify leaking into the wrong layer (routes → controllers → services);
-   - an API change (routes, fields, error codes) without a matching update to `docs/api.md`;
+   - money as floats instead of integer cents;
+   - `try/catch` in routes, or business errors not thrown as `BusinessError` subclasses (`src/shared/errors.ts`);
+   - Prisma, Fastify or Zod leaking into `application`/`domain`, or a module importing another module's internals instead of its `index.ts`;
+   - a module reading or writing another module's tables;
+   - an API change (routes, fields, status or error codes) without a matching update to `docs/api.md`;
    - an edited migration that was already applied;
-   - a new test that touches data without mocking `src/db/client.js`.
+   - a new test that touches the DB instead of using `fakePrisma` and an in-memory repository.
 
 Do not report style preferences; ESLint and Prettier cover them. Do not modify files. Keep each finding to one or two lines. If you find nothing, say so.
