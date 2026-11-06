@@ -2,7 +2,7 @@
 
 Use cases and modules are built with functions (`createX(deps)`) that receive their dependencies as an argument. `app.ts` is the only composition root: it receives the Prisma client, picks each module's infrastructure and wires the modules together. No DI container or decorators are used (`tsyringe`, `inversify`).
 
-Tests pass in-memory fakes instead of mocking modules, and any implicit dependency (clock, id generator) is injected the same way, to avoid `Date.now()` or hidden singletons.
+Tests pass in-memory fakes instead of mocking modules, and any implicit dependency (clock, id generator) is injected the same way, to avoid `Date.now()` or hidden singletons. Ids are generated only by the application (`IdGenerator`); Prisma models declare `@id` without `@default`, so there is a single source of ids.
 
 ## Who does what
 
