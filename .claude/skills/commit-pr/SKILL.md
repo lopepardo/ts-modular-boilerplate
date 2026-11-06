@@ -11,7 +11,7 @@ Current state:
 
 1. Run `pnpm typecheck && pnpm lint && pnpm test`. Stop and report if anything fails. If endpoint behavior changed, check that `docs/api.md` matches.
 2. If on `main`, create a branch first: `feat/<short-kebab-name>` or `fix/<short-kebab-name>`.
-3. Review the diff and group the changes into one coherent commit. Stage files by name; never commit `.env` or anything gitignored. If a new env var was added, check that `.env.example` and `src/config/env.ts` document it.
+3. Review the diff and group the changes into one coherent commit. Stage files by name; never commit `.env` or anything gitignored. If a new env var was added, check that `.env.example` and `src/platform/config/env.ts` document it.
 4. Write the message in English with Conventional Commits (`feat:`, `fix:`, `chore:`, `docs:`, `test:`, `refactor:`), imperative and lowercase, under 72 characters in the subject. User hint: $ARGUMENTS
    End the message with the `Co-Authored-By` line given in the session's attribution instructions, if any.
 5. Push the current branch with `-u`.

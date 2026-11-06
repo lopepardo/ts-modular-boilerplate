@@ -16,7 +16,7 @@ const EnvSchema = z
     DB_HOST: nonEmpty.default("localhost"),
     DB_PORT: z.coerce.number().int().min(1).max(65535).default(5432),
     DB_USER: nonEmpty.default("apilibrary"),
-    DB_PASSWORD: nonEmpty.default("apilibrary_password"),
+    DB_PASSWORD: nonEmpty,
     DB_NAME: nonEmpty.default("apilibrary"),
     DB_SSL: z.stringbool().default(false),
     DB_POOL_MAX: positiveInt.default(10),

@@ -3,11 +3,15 @@ import { defineConfig } from "prisma/config";
 
 const {
   DB_USER = "apilibrary",
-  DB_PASSWORD = "apilibrary_password",
   DB_HOST = "localhost",
   DB_PORT = "5432",
   DB_NAME = "apilibrary",
 } = process.env;
+
+const { DB_PASSWORD } = process.env;
+if (!DB_PASSWORD) {
+  throw new Error("DB_PASSWORD is required (see .env.example)");
+}
 
 export default defineConfig({
   schema: "prisma/schema",

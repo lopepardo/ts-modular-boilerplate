@@ -17,7 +17,7 @@ Tests pass in-memory fakes instead of mocking modules, and any implicit dependen
 
 ## `_template`
 
-`modules/_template` is a copy-me example, not part of the product. `app.ts` does not mount it; its test wires `createTemplateModule` onto a bare `createServer()`.
+`modules/_template` is a copy-me example, not part of the product. `app.ts` does not mount it and it has no test of its own: copy it, rename it and write the tests for the new module.
 
 ## Open
 

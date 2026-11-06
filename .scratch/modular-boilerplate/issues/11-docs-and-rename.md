@@ -12,3 +12,4 @@
 - [ ] Package and project names are generic, with no references to "Gastos" or expenses
 - [ ] A fresh checkout following the documented first-time steps reaches a green `pnpm typecheck && pnpm lint && pnpm test`
 - [ ] A note explains how to start a project from the template: delete the example modules and copy the template module
+- [ ] The `apilibrary` defaults for `DB_USER`, `DB_NAME` (and `DB_PASSWORD`, if it keeps a default) in `src/platform/config/env.ts`, `prisma.config.ts` and `docker-compose.yml` are replaced by a generic name

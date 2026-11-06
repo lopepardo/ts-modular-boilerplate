@@ -28,7 +28,7 @@ docker-compose.yml   local Postgres
 ## Why does each part exist?
 
 - **Modules with layers:** `http` (Fastify routes + Zod schemas + presenters), `application` (use cases and repository interfaces), `domain` (entities and rules, once a module needs them), `infra` (Prisma and in-memory repositories). Each module exposes only its `index.ts`.
-- **Boundaries are enforced by ESLint** (`eslint.config.*`, tested in `tests/architecture-rules.test.ts`): no importing another module's internals; `application`/`domain` cannot import `http`, `infra`, `platform`, or `fastify`/`zod`/Prisma/`pg`; `domain` cannot import `application`. Each module is the only reader/writer of its tables (ADR 0003).
+- **Boundaries are enforced by ESLint** (`eslint.config.*`, tested in `tests/architecture-rules.test.ts`): no importing another module's internals; `application`/`domain` cannot import `http`, `infra`, `platform`, or `fastify`/`zod`/Prisma/`pg`; `domain` cannot import `application`. Each module is the only reader/writer of its tables (ADR 0003); the lint rule for table access is still pending (issue 05).
 - **Use cases are factory functions** (`registerBookUseCase(deps)`) that receive their dependencies. `buildApp(deps)` is the single place that creates concrete ones; tests override per module (`catalog: { repository }`) and pass `fakePrisma`. No `vi.mock` of the DB client.
 - **`BusinessError` + `errorHandler`:** business errors carry only `code` and `message`; `platform/http/errorMapper.ts` maps them to HTTP and keeps the format `{ error: { code, message, traceId } }`. Schema validation errors → 400 `VALIDATION_ERROR` (with `details`), `UnauthorizedError` → 401, `ForbiddenError` → 403, `NotFoundError` → 404, `ConflictError` → 409, other `BusinessError` → 422, anything else → 500. Handlers do not catch errors.
 - **`buildApp()` separate from `main.ts`:** allows tests with `app.inject` without opening a port.
@@ -68,7 +68,7 @@ TODO: add `pnpm test:integration` (real Postgres) when issue 04 is done, and a "
 
 - Relative imports with the `.js` extension (ESM); `import type` for types (`verbatimModuleSyntax`).
 - Strict TypeScript: no `any`, `type` instead of `interface`, unused args prefixed with `_`. `exactOptionalPropertyTypes` is on: no explicit `undefined` in optional props (conditional spread).
-- Prettier: double quotes, `;`, trailing comma, 80 columns.
+- Prettier: double quotes, `;`, trailing comma, 100 columns.
 - Branches `feat/…` and `fix/…`; commits with Conventional Commits.
 - `.env` is gitignored: never commit it; document new variables in `.env.example` and `platform/config/env.ts`.
 - Language: all documentation, code, domain terms and error messages are written in **English**.

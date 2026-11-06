@@ -1,7 +1,7 @@
 opencollection: 1.0.0
 
 info:
-  name: personal-expenses-app
+  name: ts-modular-boilerplate
 config:
   proxy:
     inherit: true
