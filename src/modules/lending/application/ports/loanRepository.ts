@@ -1,4 +1,9 @@
-import type { Loan } from "../../domain/loan.js";
+import type { Loan, LoanStatus } from "../../domain/loan.js";
+
+export type LoanFilter = {
+  memberId?: string;
+  status?: LoanStatus;
+};
 
 /** Declared by the application layer, implemented in `infra`. */
 export type LoanRepository = {
@@ -9,5 +14,6 @@ export type LoanRepository = {
    * Member are serialized. Throws `BOOK_ALREADY_LOANED` if the Book already has an active Loan.
    */
   openLoan: (memberId: string, decide: (memberActiveLoans: Loan[]) => Loan) => Promise<Loan>;
+  search: (filter: LoanFilter) => Promise<Loan[]>;
   save: (loan: Loan) => Promise<Loan>;
 };

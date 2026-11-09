@@ -48,7 +48,17 @@ export const createPrismaLoanRepository = (prisma: PrismaClient): LoanRepository
     },
     findById: async (id: string) => {
       const row = await prisma.loan.findUnique({ where: { id } });
-      return row && { ...row, dueDate: dueDateAt(row.dueDate) };
+      return row && toLoan(row);
+    },
+    search: async ({ memberId, status }) => {
+      const rows = await prisma.loan.findMany({
+        where: {
+          ...(memberId !== undefined && { memberId }),
+          ...(status !== undefined && { status }),
+        },
+        orderBy: [{ borrowedAt: "asc" }, { id: "asc" }],
+      });
+      return rows.map(toLoan);
     },
     save: async (loan: Loan) => {
       const data = {
@@ -63,7 +73,7 @@ export const createPrismaLoanRepository = (prisma: PrismaClient): LoanRepository
         create: { id: loan.id, ...data },
         update: data,
       });
-      return { ...row, dueDate: dueDateAt(row.dueDate) };
+      return toLoan(row);
     },
   };
 };

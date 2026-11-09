@@ -64,6 +64,7 @@ A Member borrows a Book. Body: `{ "memberId", "bookId" }` (`memberId` is an opaq
   "bookId": "uuid",
   "memberId": "member-1",
   "status": "active",
+  "overdue": false,
   "borrowedAt": "2026-03-01T10:00:00.000Z",
   "dueDate": "2026-03-15T10:00:00.000Z"
 }
@@ -79,10 +80,16 @@ A Member returns a Loan: it moves from `active` to `returned`, with no way back.
 
 Responses: `200` loan with `"status": "returned"` (same shape as above) · `400` `VALIDATION_ERROR` (id is not a uuid) · `404` `LOAN_NOT_FOUND` · `409` `LOAN_ALREADY_RETURNED`.
 
+### `GET /loans`
+
+Lists Loans, ordered by `borrowedAt`. Optional query filters, combinable: `memberId` (non-empty string) and `status` (`active` or `returned`). Every Loan has an `overdue` flag: `true` only for an `active` Loan whose `dueDate` has passed, computed on read from the clock (nothing is stored; `returned` Loans are never overdue). Not paginated: returns every matching row (see the note on listings in `CLAUDE.md`).
+
+Responses: `200` array of loans (same shape as `POST /loans`) · `400` `VALIDATION_ERROR` (invalid `status` or empty `memberId`).
+
+### `GET /loans/:id`
+
+Responses: `200` loan (same shape, including `overdue`) · `400` `VALIDATION_ERROR` (id is not a uuid) · `404` `LOAN_NOT_FOUND`.
+
 ### `GET /health`
 
 Responses: `200` `{ "status": "ok" }`.
-
-## Pending
-
-TODO: document these endpoints once they are implemented (see `.scratch/modular-boilerplate/issues/`): the rest of the `lending` module (`GET /loans`, `GET /loans/:id`).

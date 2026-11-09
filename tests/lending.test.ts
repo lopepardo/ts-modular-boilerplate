@@ -14,9 +14,9 @@ const FIXED_NOW = new Date("2026-03-01T10:00:00.000Z");
  * Each describe gets its own app on the real Postgres and deletes only the rows it created.
  * There is no foreign key between modules, so the delete order does not matter.
  */
-const setup = () =>
+const setup = (clock = createFakeClock(FIXED_NOW)) =>
   createTestApp({
-    clock: createFakeClock(FIXED_NOW),
+    clock,
     purge: async (prisma, ids) => {
       await prisma.loan.deleteMany({ where: { id: { in: ids } } });
       await prisma.book.deleteMany({ where: { id: { in: ids } } });
@@ -58,6 +58,7 @@ describe("lending: borrow a book", () => {
       bookId,
       memberId: "member-1",
       status: "active",
+      overdue: false,
       borrowedAt: "2026-03-01T10:00:00.000Z",
       dueDate: "2026-03-15T10:00:00.000Z",
     });
@@ -140,6 +141,7 @@ describe("lending: return a loan", () => {
       bookId,
       memberId: "member-1",
       status: "returned",
+      overdue: false,
       borrowedAt: "2026-03-01T10:00:00.000Z",
       dueDate: "2026-03-15T10:00:00.000Z",
     });
@@ -324,4 +326,119 @@ it("the database allows only one active Loan per Book", async () => {
     await prisma.loan.deleteMany({ where: { id: { in: [...ids] } } });
     await cleanup();
   }
+});
+
+describe("lending: view and list loans", () => {
+  let wiring: Awaited<ReturnType<typeof setup>>;
+  let app: App;
+  const clock = createFakeClock(FIXED_NOW);
+  type LoanBody = { id: string; memberId: string; status: string; overdue: boolean };
+
+  beforeAll(async () => {
+    wiring = await setup(clock);
+    app = wiring.app;
+  });
+
+  afterAll(async () => {
+    await wiring.cleanup();
+  });
+
+  beforeEach(() => {
+    clock.set(FIXED_NOW);
+  });
+
+  const borrowFor = async (memberId: string) => {
+    const bookId = (
+      await app.inject({
+        method: "POST",
+        url: "/books",
+        payload: { title: "Dune", author: "Frank Herbert", isbn: "978-0441172719" },
+      })
+    ).json<{ id: string }>().id;
+    return (
+      await app.inject({ method: "POST", url: "/loans", payload: { memberId, bookId } })
+    ).json<LoanBody>();
+  };
+  const view = (id: string) => app.inject({ method: "GET", url: `/loans/${id}` });
+  const list = (query: string) => app.inject({ method: "GET", url: `/loans?${query}` });
+  const ids = (res: { json: <T>() => T }) => res.json<LoanBody[]>().map((loan) => loan.id);
+
+  it("views a Loan with its status, due date and overdue flag", async () => {
+    const loan = await borrowFor("view-member");
+
+    const res = await view(loan.id);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toMatchObject({
+      id: loan.id,
+      status: "active",
+      overdue: false,
+      dueDate: "2026-03-15T10:00:00.000Z",
+    });
+  });
+
+  it("returns 404 LOAN_NOT_FOUND for an unknown Loan", async () => {
+    const res = await view("6f1c2b34-0000-4000-8000-000000000000");
+
+    expect(res.statusCode).toBe(404);
+    expect(res.json<ErrorBody>().error).toMatchObject({ code: "LOAN_NOT_FOUND" });
+  });
+
+  it("returns 400 VALIDATION_ERROR when the id is not a uuid", async () => {
+    expect((await view("abc")).statusCode).toBe(400);
+  });
+
+  it("flips an active Loan to overdue when the clock passes its due date, without any write", async () => {
+    const loan = await borrowFor("overdue-member");
+
+    clock.set(new Date("2026-03-15T10:00:00.000Z"));
+    expect((await view(loan.id)).json<LoanBody>().overdue).toBe(false);
+
+    clock.set(new Date("2026-03-15T10:00:00.001Z"));
+    const res = await view(loan.id);
+    expect(res.json<LoanBody>()).toMatchObject({ status: "active", overdue: true });
+  });
+
+  it("never reports a returned Loan as overdue", async () => {
+    const loan = await borrowFor("returned-member");
+    await app.inject({ method: "POST", url: `/loans/${loan.id}/return` });
+    clock.set(new Date("2027-01-01T00:00:00.000Z"));
+
+    const res = await view(loan.id);
+
+    expect(res.json<LoanBody>()).toMatchObject({ status: "returned", overdue: false });
+  });
+
+  it("lists Loans filtered by member, by status, and both combined", async () => {
+    const a1 = await borrowFor("list-a");
+    const a2 = await borrowFor("list-a");
+    const b1 = await borrowFor("list-b");
+    await app.inject({ method: "POST", url: `/loans/${a2.id}/return` });
+
+    const byMember = await list("memberId=list-a");
+    expect(ids(byMember).sort()).toEqual([a1.id, a2.id].sort());
+
+    const byStatus = await list("status=active&memberId=list-b");
+    expect(ids(byStatus)).toEqual([b1.id]);
+
+    const combined = await list("memberId=list-a&status=returned");
+    expect(ids(combined)).toEqual([a2.id]);
+
+    const allActive = ids(await list("status=active"));
+    expect(allActive).toEqual(expect.arrayContaining([a1.id, b1.id]));
+    expect(allActive).not.toContain(a2.id);
+  });
+
+  it("computes overdue in listings from the clock", async () => {
+    const loan = await borrowFor("list-overdue");
+    clock.set(new Date("2026-04-01T00:00:00.000Z"));
+
+    const res = await list("memberId=list-overdue");
+
+    expect(res.json<LoanBody[]>()).toMatchObject([{ id: loan.id, overdue: true }]);
+  });
+
+  it("rejects an invalid status filter with 400", async () => {
+    expect((await list("status=bogus")).statusCode).toBe(400);
+  });
 });

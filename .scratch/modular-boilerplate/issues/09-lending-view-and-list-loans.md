@@ -4,12 +4,12 @@
 
 **Blocked by:** 06
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Viewing a loan returns its status, due date and overdue flag
-- [ ] Viewing an unknown loan returns 404
-- [ ] Listing filters by member and by status, individually and combined
-- [ ] Advancing the fixed clock past a due date flips an active loan to overdue in the response without any write
-- [ ] Returned loans are never reported as overdue
-- [ ] Scenarios pass against the real Postgres (`pnpm test`)
-- [ ] `pnpm typecheck && pnpm lint && pnpm test` pass
+- [x] Viewing a loan returns its status, due date and overdue flag
+- [x] Viewing an unknown loan returns 404
+- [x] Listing filters by member and by status, individually and combined
+- [x] Advancing the fixed clock past a due date flips an active loan to overdue in the response without any write
+- [x] Returned loans are never reported as overdue
+- [x] Scenarios pass against the real Postgres (`pnpm test`)
+- [x] `pnpm typecheck && pnpm lint && pnpm test` pass
