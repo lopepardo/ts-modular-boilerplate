@@ -1,18 +1,23 @@
 enum LoanStatus {
   active
   returned
+
+  @@schema("lending")
 }
 
 model Loan {
   id         String     @id
+  /// Id of a catalog Book. Deliberately not a relation: modules share ids, not foreign keys (ADR 0003).
   bookId     String
+  /// Opaque external id; the library does not register Members.
   memberId   String
   status     LoanStatus
   borrowedAt DateTime
   dueDate    DateTime
 
-  // Allowed across modules only toward the dependency, restrictive (ADR 0003).
-  book Book @relation(fields: [bookId], references: [id], onDelete: Restrict)
-
   @@index([bookId])
+  @@index([memberId])
+  // A Book has at most one active Loan; the database guarantees it even under concurrent requests.
+  @@unique([bookId], where: raw("status = 'active'"), map: "Loan_one_active_per_book")
+  @@schema("lending")
 }

@@ -6,7 +6,7 @@
 
 **Status:** ready-for-agent
 
-- [ ] `CLAUDE.md` and `.claude/rules/` describe modules, layers, DI, boundaries and data ownership, consistent with ADR 0001–0003
+- [ ] `CLAUDE.md` and `.claude/rules/` describe modules, layers, DI, boundaries and data ownership, consistent with ADR 0001–0004
 - [ ] The API contract document matches the implemented `catalog` and `lending` endpoints, status codes and error codes
 - [ ] The request collection covers the library endpoints
 - [ ] Package and project names are generic, with no references to "Gastos" or expenses

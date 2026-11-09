@@ -5,10 +5,16 @@ info:
 
 http:
   method: GET
-  url: "{{baseUrl}}/books?author=clear&retired=false"
+  url: "{{baseUrl}}/books?title=habits&author=clear&isbn=978-0735211292&retired=false"
   params:
+    - name: title
+      value: habits
+      type: query
     - name: author
       value: clear
+      type: query
+    - name: isbn
+      value: 978-0735211292
       type: query
     - name: retired
       value: "false"

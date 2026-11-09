@@ -10,7 +10,7 @@ import { testConfig } from "../support/testConfig.js";
 
 /*
  * Same scenarios as tests/lending.test.ts, against the real Prisma repositories.
- * Loans are deleted before Books because the foreign key restricts deletes.
+ * There is no foreign key between modules (ADR 0003), so cleanup order does not matter.
  */
 const wire = async () => {
   const prisma = createPrismaClient(loadEnv());
@@ -43,24 +43,26 @@ const wire = async () => {
 
 lendingScenarios("prisma", wire);
 
-it("prisma: a Book with a Loan cannot be deleted (restrictive foreign key)", async () => {
+it("prisma: the database allows only one active Loan per Book", async () => {
   const { app, prisma, cleanup } = await wire();
+  const loan = (id: string, status: "active" | "returned") => ({
+    id,
+    bookId: "book-unique-index",
+    memberId: "member-index",
+    status,
+    borrowedAt: FIXED_NOW,
+    dueDate: FIXED_NOW,
+  });
+  const ids = [randomUUID(), randomUUID(), randomUUID()] as const;
   try {
-    const book = (
-      await app.inject({
-        method: "POST",
-        url: "/books",
-        payload: { title: "FK", author: "Check", isbn: "FK-1" },
-      })
-    ).json<{ id: string }>();
-    await app.inject({
-      method: "POST",
-      url: "/loans",
-      payload: { memberId: "member-fk", bookId: book.id },
-    });
+    await prisma.loan.create({ data: loan(ids[0], "active") });
 
-    await expect(prisma.book.delete({ where: { id: book.id } })).rejects.toThrow();
+    // A second active Loan for the same Book is rejected by the partial unique index...
+    await expect(prisma.loan.create({ data: loan(ids[1], "active") })).rejects.toThrow();
+    // ...but returned Loans do not count.
+    await expect(prisma.loan.create({ data: loan(ids[2], "returned") })).resolves.toBeDefined();
   } finally {
+    await prisma.loan.deleteMany({ where: { id: { in: [...ids] } } });
     await app.close();
     await cleanup();
   }

@@ -38,17 +38,17 @@ export const buildApp = async (deps: AppDeps) => {
 
   /* Modules */
   const catalog = createCatalogModule({
-    repository: deps.catalog?.repository ?? createPrismaBookRepository(prisma),
     generateId,
+    repository: deps.catalog?.repository ?? createPrismaBookRepository(prisma),
   });
   await app.register(catalog.routes, { prefix: "/books" });
 
   const lending = createLendingModule({
+    generateId,
+    clock,
     repository: deps.lending?.repository ?? createPrismaLoanRepository(prisma),
     /* lending's port, satisfied by catalog's public API */
     bookCatalog: { getBookStatus: catalog.getBookStatus },
-    generateId,
-    clock,
   });
   await app.register(lending.routes, { prefix: "/loans" });
 
