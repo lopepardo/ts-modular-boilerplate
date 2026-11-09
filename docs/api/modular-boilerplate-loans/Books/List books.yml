@@ -6,6 +6,13 @@ info:
 http:
   method: GET
   url: "{{baseUrl}}/books?author=clear&retired=false"
+  params:
+    - name: author
+      value: clear
+      type: query
+    - name: retired
+      value: "false"
+      type: query
   auth: inherit
 
 settings:

@@ -5,7 +5,11 @@ info:
 
 http:
   method: POST
-  url: "{{baseUrl}}/books/14aff8ea-2a56-4537-8e5b-ca9a8c6c8894/retire"
+  url: "{{baseUrl}}/books/:id/retire"
+  params:
+    - name: id
+      value: 14aff8ea-2a56-4537-8e5b-ca9a8c6c8894
+      type: path
   auth: inherit
 
 settings:

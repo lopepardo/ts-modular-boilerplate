@@ -54,7 +54,8 @@ export const bookRoutes = (deps: {
           ...(isbn !== undefined && { isbn }),
           ...(retired !== undefined && { retired }),
         });
-        return reply.code(200).send(books.map(presentBook));
+        const result = books.map(presentBook);
+        return reply.code(200).send(result);
       },
     );
 
@@ -83,7 +84,8 @@ export const bookRoutes = (deps: {
       },
       async (request, reply) => {
         const book = await deps.retireBook(request.params.id);
-        return reply.code(200).send(presentBook(book));
+        const result = presentBook(book);
+        return reply.code(200).send(result);
       },
     );
   };
