@@ -31,9 +31,28 @@ Registers a Book. Body: `{ "title", "author", "isbn" }` (non-empty strings, trim
 
 Responses: `201` book · `400` `VALIDATION_ERROR`.
 
+### `GET /books`
+
+Lists Books, optionally narrowed by query parameters (all combined with AND; no pagination yet). Results are ordered by `title`, then `id`.
+
+| Parameter | Matches                                                  |
+| --------- | -------------------------------------------------------- |
+| `title`   | Part of the title, case-insensitive (1–200 characters).  |
+| `author`  | Part of the author, case-insensitive (1–200 characters). |
+| `isbn`    | Exactly this ISBN (1–32 characters).                     |
+| `retired` | `true` for Retired Books only, `false` for the others.   |
+
+Responses: `200` array of books (same shape as above, `[]` when nothing matches) · `400` `VALIDATION_ERROR`.
+
 ### `GET /books/:id`
 
 Responses: `200` book (same shape as above) · `400` `VALIDATION_ERROR` (id is not a uuid) · `404` `BOOK_NOT_FOUND`.
+
+### `POST /books/:id/retire`
+
+Takes the Book out of circulation. It stays in the catalog and can still be viewed; Books are never deleted (there is no `DELETE /books/:id`). Idempotent: retiring a Book that is already Retired succeeds and changes nothing. No body.
+
+Responses: `200` book with `"retired": true` · `400` `VALIDATION_ERROR` (id is not a uuid) · `404` `BOOK_NOT_FOUND`.
 
 ### `GET /health`
 
@@ -41,4 +60,4 @@ Responses: `200` `{ "status": "ok" }`.
 
 ## Pending
 
-TODO: document these endpoints once they are implemented (see `.scratch/modular-boilerplate/issues/`): `GET /books`, `POST /books/:id/retire`, and the `lending` module (`POST /loans`, `GET /loans`, `GET /loans/:id`, `POST /loans/:id/return`).
+TODO: document these endpoints once they are implemented (see `.scratch/modular-boilerplate/issues/`): the `lending` module (`POST /loans`, `GET /loans`, `GET /loans/:id`, `POST /loans/:id/return`).

@@ -9,6 +9,17 @@ export const NewBookSchema = z.object({
 
 export const BookParamsSchema = z.object({ id: z.uuid() });
 
+/** Optional search criteria for listing books; `retired` arrives as the text "true" or "false". */
+export const BookQuerySchema = z.object({
+  title: z.string().trim().min(1).max(200).optional(),
+  author: z.string().trim().min(1).max(200).optional(),
+  isbn: z.string().trim().min(1).max(32).optional(),
+  retired: z
+    .enum(["true", "false"])
+    .transform((value) => value === "true")
+    .optional(),
+});
+
 /** Response contract for a book: the only shape that leaves the API. */
 export const BookResponseSchema = z.object({
   id: z.string(),
@@ -17,5 +28,7 @@ export const BookResponseSchema = z.object({
   isbn: z.string(),
   retired: z.boolean(),
 });
+
+export const BookListResponseSchema = z.array(BookResponseSchema);
 
 export type BookResponse = z.infer<typeof BookResponseSchema>;

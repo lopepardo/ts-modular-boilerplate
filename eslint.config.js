@@ -5,13 +5,14 @@
  *   1. Discovery      – which modules exist under src/modules
  *   2. Import rules   – reusable "forbidden import" patterns (ADR 0001)
  *   3. Rule builders  – turn patterns into per-module / per-layer configs
- *   4. Base config    – ignores, recommended presets, TypeScript style rules
- *   5. Export         – everything assembled in order
+ *   4. Table ownership – only a module's infra touches its Prisma models (ADR 0003)
+ *   5. Base config    – ignores, recommended presets, TypeScript style rules
+ *   6. Export         – everything assembled in order
  *
  * Order matters in flat configs: later entries override earlier ones.
  */
 import js from "@eslint/js";
-import { readdirSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import tseslint from "typescript-eslint";
 
 // ---------------------------------------------------------------------------
@@ -172,7 +173,62 @@ const infrastructureBoundary = {
 };
 
 // ---------------------------------------------------------------------------
-// 4. Base config
+// 4. Table ownership (ADR 0003)
+//    prisma/schema/<module>.prisma declares the models a module owns. Only
+//    that module's `infra/` may use the matching client delegate
+//    (`prisma.book`, `tx.book`, `this.prisma.book`). Tests are exempt so
+//    integration tests can clean up the rows they create.
+// ---------------------------------------------------------------------------
+
+const schemaDir = `${import.meta.dirname}/prisma/schema`;
+
+/** Models owned by each module, read from its schema file (`base.prisma` has none). */
+const modelsByModule = Object.fromEntries(
+  modules.map((name) => {
+    let schema = "";
+    try {
+      schema = readFileSync(`${schemaDir}/${name}.prisma`, "utf8");
+    } catch {
+      // A module without tables has no schema file.
+    }
+    return [name, [...schema.matchAll(/^model\s+(\w+)/gm)].map((match) => match[1])];
+  }),
+);
+
+/** `Book` -> `book`: the property name on the Prisma client. */
+const delegateName = (model) => model.charAt(0).toLowerCase() + model.slice(1);
+
+const clientNames = "/^(prisma|tx|db|client)$/";
+
+/** Selector for `<client>.<delegate>` and `this.<client>.<delegate>`. */
+const touchesTable = (model) => ({
+  selector: `MemberExpression[property.name='${delegateName(model)}']:matches([object.name=${clientNames}], [object.property.name=${clientNames}])`,
+  message: `Table ${model} belongs to another module; use that module's public API. See ADR 0003.`,
+});
+
+/** An empty list must switch the rule off: severity alone would inherit the previous options. */
+const restrictTables = (models) => ({
+  "no-restricted-syntax": models.length === 0 ? "off" : ["error", ...models.map(touchesTable)],
+});
+
+const allModels = Object.values(modelsByModule).flat();
+
+const tableOwnership = [
+  // Default: nobody touches any table...
+  { files: ["src/**/*.ts"], rules: restrictTables(allModels) },
+  // ...except a module's infra, which may use its own tables.
+  ...modules.map((name) => ({
+    files: [`src/modules/${name}/infra/**/*.ts`],
+    rules: restrictTables(
+      Object.entries(modelsByModule)
+        .filter(([owner]) => owner !== name)
+        .flatMap(([, models]) => models),
+    ),
+  })),
+];
+
+// ---------------------------------------------------------------------------
+// 5. Base config
 // ---------------------------------------------------------------------------
 
 /** Files and folders ESLint never looks at. */
@@ -216,7 +272,7 @@ const typescriptProject = {
 };
 
 // ---------------------------------------------------------------------------
-// 5. Export (order matters: general → specific)
+// 6. Export (order matters: general → specific)
 // ---------------------------------------------------------------------------
 
 export default [
@@ -227,4 +283,5 @@ export default [
   outsideModulesBoundary,
   infrastructureBoundary,
   ...moduleBoundaries,
+  ...tableOwnership,
 ];

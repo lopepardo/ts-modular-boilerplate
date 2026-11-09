@@ -4,13 +4,13 @@
 
 **Blocked by:** 03
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Listing returns books and supports searching by the agreed criteria
-- [ ] Retiring a book marks it Retired; retiring it again succeeds without changing anything else
-- [ ] Retiring an unknown book returns 404
-- [ ] No endpoint or use case deletes a book
-- [ ] The public entry point exposes the existence/retired query and nothing from `domain` or `infra`
-- [ ] `pnpm lint` fails when a module reads or writes another module's tables (demonstrated on a deliberate violation, then removed)
-- [ ] Scenarios work with in-memory wiring and, once ticket 04 exists, with the real wiring
-- [ ] `pnpm typecheck && pnpm lint && pnpm test` pass
+- [x] Listing returns books and supports searching by the agreed criteria
+- [x] Retiring a book marks it Retired; retiring it again succeeds without changing anything else
+- [x] Retiring an unknown book returns 404
+- [x] No endpoint or use case deletes a book
+- [x] The public entry point exposes the existence/retired query and nothing from `domain` or `infra`
+- [x] `pnpm lint` fails when a module reads or writes another module's tables (demonstrated on a deliberate violation, then removed)
+- [x] Scenarios work with in-memory wiring and, once ticket 04 exists, with the real wiring
+- [x] `pnpm typecheck && pnpm lint && pnpm test` pass

@@ -16,5 +16,17 @@ export const createPrismaBookRepository = (prisma: PrismaClient): BookRepository
     findById: (id) => {
       return prisma.book.findUnique({ where: { id } });
     },
+
+    search: ({ title, author, isbn, retired }) => {
+      return prisma.book.findMany({
+        where: {
+          ...(title !== undefined && { title: { contains: title, mode: "insensitive" } }),
+          ...(author !== undefined && { author: { contains: author, mode: "insensitive" } }),
+          ...(isbn !== undefined && { isbn }),
+          ...(retired !== undefined && { retired }),
+        },
+        orderBy: [{ title: "asc" }, { id: "asc" }],
+      });
+    },
   };
 };
