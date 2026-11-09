@@ -14,8 +14,6 @@ import { bookRoutes } from "./http/routes.js";
  * exported; callers get them through the use cases' return types.
  */
 export type { BookStatus } from "./application/useCases/getBookStatus.js";
-export type { BookRepository } from "./application/ports/bookRepository.js";
-export { createInMemoryBookRepository } from "./infra/inMemoryBookRepository.js";
 export { createPrismaBookRepository } from "./infra/prismaBookRepository.js";
 
 /** Expose only what a consumer uses today: add a use case here when another module needs it. */

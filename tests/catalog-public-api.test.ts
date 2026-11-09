@@ -1,25 +1,38 @@
-import { describe, expect, it } from "vitest";
+import { randomUUID } from "node:crypto";
+import { afterAll, describe, expect, it } from "vitest";
 
-import { createCatalogModule, createInMemoryBookRepository } from "../src/modules/catalog/index.js";
+import { loadEnv } from "../src/platform/config/env.js";
+import { createPrismaClient } from "../src/platform/db/client.js";
+import { createCatalogModule, createPrismaBookRepository } from "../src/modules/catalog/index.js";
 
 describe("catalog public API: getBookStatus", () => {
-  const repository = createInMemoryBookRepository();
+  const prisma = createPrismaClient(loadEnv());
   const catalog = createCatalogModule({
-    repository,
-    generateId: () => "00000000-0000-4000-8000-000000000001",
+    repository: createPrismaBookRepository(prisma),
+    generateId: () => randomUUID(),
   });
-  const book = { id: "book-1", title: "Dune", author: "Herbert", isbn: "1" };
+  const bookId = randomUUID();
+
+  afterAll(async () => {
+    try {
+      await prisma.book.deleteMany({ where: { id: bookId } });
+    } finally {
+      await prisma.$disconnect();
+    }
+  });
 
   it("reports an unknown book as not existing", async () => {
-    expect(await catalog.getBookStatus("missing")).toEqual({ exists: false });
+    expect(await catalog.getBookStatus(randomUUID())).toEqual({ exists: false });
   });
 
   it("reports whether an existing book is retired", async () => {
-    await repository.save({ ...book, retired: false });
-    expect(await catalog.getBookStatus(book.id)).toEqual({ exists: true, retired: false });
+    await prisma.book.create({
+      data: { id: bookId, title: "Dune", author: "Herbert", isbn: "1", retired: false },
+    });
+    expect(await catalog.getBookStatus(bookId)).toEqual({ exists: true, retired: false });
 
-    await repository.save({ ...book, retired: true });
-    expect(await catalog.getBookStatus(book.id)).toEqual({ exists: true, retired: true });
+    await prisma.book.update({ where: { id: bookId }, data: { retired: true } });
+    expect(await catalog.getBookStatus(bookId)).toEqual({ exists: true, retired: true });
   });
 
   it("exposes exactly the routes and the status query", () => {

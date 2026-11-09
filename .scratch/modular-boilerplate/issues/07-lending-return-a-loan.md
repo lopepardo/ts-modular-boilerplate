@@ -10,5 +10,5 @@
 - [ ] Returning an already returned loan is refused with a 409 business error
 - [ ] Returning an unknown loan returns 404
 - [ ] Returning a loan succeeds even if its book has been retired since
-- [ ] Scenarios work with in-memory and real wiring
+- [ ] Scenarios pass against the real Postgres (`pnpm test`)
 - [ ] `pnpm typecheck && pnpm lint && pnpm test` pass

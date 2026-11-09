@@ -11,5 +11,5 @@
 - [ ] Listing filters by member and by status, individually and combined
 - [ ] Advancing the fixed clock past a due date flips an active loan to overdue in the response without any write
 - [ ] Returned loans are never reported as overdue
-- [ ] Scenarios work with in-memory and real wiring
+- [ ] Scenarios pass against the real Postgres (`pnpm test`)
 - [ ] `pnpm typecheck && pnpm lint && pnpm test` pass

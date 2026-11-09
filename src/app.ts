@@ -4,27 +4,16 @@ import { createServer, type ServerConfig } from "./platform/http/createServer.js
 import { systemClock, type Clock } from "./shared/clock.js";
 import { uuidGenerator, type IdGenerator } from "./shared/ids.js";
 
-import {
-  createCatalogModule,
-  createPrismaBookRepository,
-  type BookRepository,
-} from "./modules/catalog/index.js";
-import {
-  createLendingModule,
-  createPrismaLoanRepository,
-  type LoanRepository,
-} from "./modules/lending/index.js";
+import { createCatalogModule, createPrismaBookRepository } from "./modules/catalog/index.js";
+import { createLendingModule, createPrismaLoanRepository } from "./modules/lending/index.js";
 
 export type AppDeps = {
   /* Shared (cross-cutting) infrastructure: one property per port/client */
   config: ServerConfig;
   prisma: PrismaClient;
+  /** Tests inject a deterministic id generator and clock; omitted, the real ones are used. */
   generateId?: IdGenerator;
   clock?: Clock;
-
-  /** Per-module overrides (tests): anything omitted uses the real thing. */
-  catalog?: { repository?: BookRepository };
-  lending?: { repository?: LoanRepository };
 };
 
 /**
@@ -39,14 +28,14 @@ export const buildApp = async (deps: AppDeps) => {
   /* Modules */
   const catalog = createCatalogModule({
     generateId,
-    repository: deps.catalog?.repository ?? createPrismaBookRepository(prisma),
+    repository: createPrismaBookRepository(prisma),
   });
   await app.register(catalog.routes, { prefix: "/books" });
 
   const lending = createLendingModule({
     generateId,
     clock,
-    repository: deps.lending?.repository ?? createPrismaLoanRepository(prisma),
+    repository: createPrismaLoanRepository(prisma),
     /* lending's port, satisfied by catalog's public API */
     bookCatalog: { getBookStatus: catalog.getBookStatus },
   });

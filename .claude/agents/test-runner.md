@@ -15,6 +15,6 @@ If anything fails, return for each failure:
 - the error, summarized in at most 10 lines;
 - your hypothesis about the cause, pointing to `file:line` in `src/` when you can tell.
 
-If the run fails before any test executes (for example, the Prisma client is missing), report that error and suggest `pnpm db:generate` when it applies.
+If the run fails before any test executes, report that error and suggest the matching fix: `pnpm db:generate` when the Prisma client is missing, or `docker compose up -d postgres` and `pnpm db:migrate` when the database is unreachable or not migrated (tests run against the real local Postgres).
 
 Do not modify files.

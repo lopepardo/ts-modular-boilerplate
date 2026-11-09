@@ -177,7 +177,7 @@ const infrastructureBoundary = {
 //    prisma/schema/<module>.prisma declares the models a module owns. Only
 //    that module's `infra/` may use the matching client delegate
 //    (`prisma.book`, `tx.book`, `this.prisma.book`). Tests are exempt so
-//    integration tests can clean up the rows they create.
+//    tests can delete the rows they create.
 // ---------------------------------------------------------------------------
 
 const schemaDir = `${import.meta.dirname}/prisma/schema`;

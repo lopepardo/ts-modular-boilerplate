@@ -19,7 +19,7 @@ Reference implementation: `src/modules/catalog/` (`http/routes.ts`, `application
 - `http/`: Fastify routes, Zod schemas for body/query/params (via `ZodTypeProvider`), and presenters (e.g. `presentBook`) to map the entity to the public shape. Let errors propagate; never `try/catch` to format responses.
 - `application/`: `useCases/` (factory functions that receive their dependencies), `ports/` (repository interfaces) and `deps.ts` (the module's dependency type). Entities live in `domain/`. No Fastify, Zod or Prisma imports.
 - `domain/`: entities and rules, only once the module has real invariants.
-- `infra/`: Prisma and in-memory repository implementations.
+- `infra/`: Prisma repository implementations.
 - `index.ts`: the module's only public entry point, used by `app.ts` and tests. Modules never import each other: to use another module, declare a port in `application/ports/` and adapt it in `app.ts`.
 - With `exactOptionalPropertyTypes`, never pass `undefined` to optional props; use conditional spread.
 
@@ -49,5 +49,5 @@ Filters are optional query params validated with Zod. There is no pagination yet
 ## Checklist when changing the API
 
 1. Update `docs/api.md` (routes, fields, status and error codes).
-2. Add or adjust tests in `tests/` using `buildApp({ config: testConfig, prisma: fakePrisma, <module>: { repository } })` + `app.inject` (no DB). See `tests/catalog.test.ts`.
+2. Add or adjust tests in `tests/` using `createTestApp()` (`tests/support/testApp.ts`) + `app.inject` against the real Postgres. See `tests/catalog.test.ts`.
 3. Run `pnpm typecheck && pnpm lint && pnpm test`.

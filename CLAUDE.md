@@ -17,7 +17,7 @@ src/
   platform/          config/env.ts, db/client.ts (+ generated/), http/ (createServer, errorHandler, errorMapper), logging/
   shared/            BusinessError and subclasses, Clock, IdGenerator
 prisma/schema/       one .prisma file per module (+ base.prisma); migrations/
-tests/               *.test.ts (Vitest, no DB); support/ = fakePrisma, testConfig
+tests/               *.test.ts (Vitest, real Postgres); support/ = testApp, fakeClock, testConfig
 docs/api.md          endpoint contract
 docs/adr/            architecture decisions
 docs/api/            request collection (OpenCollection/Bruno) for manual testing
@@ -28,9 +28,9 @@ docker-compose.yml   local Postgres
 
 ## Why does each part exist?
 
-- **Modules with layers:** `http` (Fastify routes + Zod schemas + presenters), `application` (use cases and repository interfaces), `domain` (entities and rules, once a module needs them), `infra` (Prisma and in-memory repositories). Each module exposes only its `index.ts`.
-- **Boundaries are enforced by ESLint** (`eslint.config.*`, tested in `tests/architecture-rules.test.ts`): modules never import each other (cross-module needs go through a port in the consumer, adapted in `app.ts`); `application`/`domain` cannot import `http`, `infra`, `platform`, or `fastify`/`zod`/Prisma/`pg`; `domain` cannot import `application`. Each module is the only reader/writer of its tables, which live in its own Postgres schema with no foreign keys or relations to other modules' tables: other modules' ids are plain columns (ADR 0003; how to grow toward events/services: ADR 0004); ESLint (heuristic: aliases, destructuring and raw SQL are not caught) rejects `prisma.<model>` (also `tx.`/`this.prisma.`) outside the owning module's `infra/`, where the owner is the module whose `prisma/schema/<module>.prisma` declares the model (tests are exempt so integration cleanup works).
-- **Use cases are factory functions** (`registerBookUseCase(deps)` in `application/useCases/`) that receive their dependencies. `buildApp(deps)` is the single place that creates concrete ones; tests override per module (`catalog: { repository }`) and pass `fakePrisma`. No `vi.mock` of the DB client.
+- **Modules with layers:** `http` (Fastify routes + Zod schemas + presenters), `application` (use cases and repository interfaces), `domain` (entities and rules, once a module needs them), `infra` (Prisma repositories). Each module exposes only its `index.ts`.
+- **Boundaries are enforced by ESLint** (`eslint.config.*`, tested in `tests/architecture-rules.test.ts`): modules never import each other (cross-module needs go through a port in the consumer, adapted in `app.ts`); `application`/`domain` cannot import `http`, `infra`, `platform`, or `fastify`/`zod`/Prisma/`pg`; `domain` cannot import `application`. Each module is the only reader/writer of its tables, which live in its own Postgres schema with no foreign keys or relations to other modules' tables: other modules' ids are plain columns (ADR 0003; how to grow toward events/services: ADR 0004); ESLint (heuristic: aliases, destructuring and raw SQL are not caught) rejects `prisma.<model>` (also `tx.`/`this.prisma.`) outside the owning module's `infra/`, where the owner is the module whose `prisma/schema/<module>.prisma` declares the model (tests are exempt so they can delete the rows they create).
+- **Use cases are factory functions** (`registerBookUseCase(deps)` in `application/useCases/`) that receive their dependencies. `buildApp(deps)` is the single place that creates concrete ones. Tests run the real app on the local Postgres and only inject `generateId` and `clock` (`tests/support/testApp.ts`). No in-memory repositories and no `vi.mock` of the DB client.
 - **`BusinessError` + `errorHandler`:** business errors carry only `code` and `message`; `platform/http/errorMapper.ts` maps them to HTTP and keeps the format `{ error: { code, message, traceId } }`. Schema validation errors → 400 `VALIDATION_ERROR` (with `details`), `UnauthorizedError` → 401, `ForbiddenError` → 403, `NotFoundError` → 404, `ConflictError` → 409, other `BusinessError` → 422, anything else → 500. Handlers do not catch errors.
 - **`buildApp()` separate from `main.ts`:** allows tests with `app.inject` without opening a port.
 - **`platform/config/env.ts`:** fails fast (`process.exit(1)`) if the environment is invalid; `main.ts` passes the config down, the rest of the code never reads `process.env`.
@@ -52,8 +52,7 @@ pnpm db:migrate
 ### Commands
 
 - `pnpm dev` — server with reload (`tsx watch`) on :3000
-- `pnpm test` — Vitest; one file: `pnpm test -- tests/catalog.test.ts`; one test: `pnpm test -- -t "name"`
-- `pnpm test:integration` — same scenarios as `pnpm test` against the real Prisma repositories on the local Postgres (needs `docker compose up -d postgres` + `pnpm db:migrate`); deletes only the rows it created
+- `pnpm test` — Vitest against the real local Postgres (needs `docker compose up -d postgres` + `pnpm db:migrate`); each test deletes only the rows it created. One file: `pnpm test -- tests/catalog.test.ts`; one test: `pnpm test -- -t "name"`
 - `pnpm typecheck` — `tsc --noEmit` (includes `tests/`)
 - `pnpm lint` / `pnpm format` — ESLint / Prettier
 - `pnpm db:generate` — after cloning and after every change to `prisma/schema/*.prisma`
@@ -64,7 +63,7 @@ TODO: add a "start a project from this template" note (issue 11).
 
 ### Verification (before considering something done)
 
-`pnpm typecheck && pnpm lint && pnpm test`. If you changed an endpoint, status code or error code, update `docs/api.md` and the test.
+`pnpm typecheck && pnpm lint && pnpm test` (Postgres must be up and migrated). If you changed an endpoint, status code or error code, update `docs/api.md` and the test.
 
 ### Project rules
 

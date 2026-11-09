@@ -1,13 +1,11 @@
 import { afterAll, describe, expect, it } from "vitest";
 
-import { buildApp } from "../src/app.js";
-import { fakePrisma } from "./support/fakePrisma.js";
-import { testConfig } from "./support/testConfig.js";
+import { createTestApp } from "./support/testApp.js";
 
-const app = await buildApp({ config: testConfig, prisma: fakePrisma });
+const { app, cleanup } = await createTestApp();
 
 describe("GET /health", () => {
-  afterAll(() => app.close());
+  afterAll(cleanup);
 
   it("returns 200 with status ok", async () => {
     const res = await app.inject({ method: "GET", url: "/health" });

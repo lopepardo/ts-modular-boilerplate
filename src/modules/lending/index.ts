@@ -10,8 +10,6 @@ import { loanRoutes } from "./http/routes.js";
  * the `BookCatalog` port, adapted in app.ts.
  */
 export type { BookAvailability, BookCatalog } from "./application/ports/bookCatalog.js";
-export type { LoanRepository } from "./application/ports/loanRepository.js";
-export { createInMemoryLoanRepository } from "./infra/inMemoryLoanRepository.js";
 export { createPrismaLoanRepository } from "./infra/prismaLoanRepository.js";
 
 /** No other module consumes lending yet: expose a use case here when one does. */

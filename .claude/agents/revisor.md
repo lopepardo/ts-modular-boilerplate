@@ -19,6 +19,6 @@ Report only:
    - a module reading or writing another module's tables;
    - an API change (routes, fields, status or error codes) without a matching update to `docs/api.md`;
    - an edited migration that was already applied;
-   - a new test that touches the DB instead of using `fakePrisma` and an in-memory repository.
+   - a new test that mocks the DB client or builds the app without `createTestApp()`, or one that leaves rows behind instead of deleting only what it created.
 
 Do not report style preferences; ESLint and Prettier cover them. Do not modify files. Keep each finding to one or two lines. If you find nothing, say so.

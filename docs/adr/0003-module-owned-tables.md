@@ -8,7 +8,7 @@ Each module owns its tables and is the only one that reads and writes them (ADR 
 - **One Prisma file per module** (`prisma/schema/<module>.prisma`); `base.prisma` holds only the generator and datasource.
 - **No relations or foreign keys between modules.** A module stores another module's id as a plain column (`Loan.bookId`), exactly like `memberId`, which points outside the application. Prisma needs a relation field on both models for a foreign key, so an `@relation` would also make `catalog` know about `lending` in its own schema, and it would let `include: { book: true }` read another module's table, which the lint rule cannot see.
 - **No cross-module joins.** If `lending` needs data about Books, it asks `catalog` through a port (for lists, a batch call such as `getBooks(ids)`) and combines the results in memory.
-- ESLint (heuristic: aliases, destructuring and raw SQL are not caught) rejects `prisma.<model>` (also `tx.`/`this.prisma.`) outside the owning module's `infra/`; the owner is the module whose `prisma/schema/<module>.prisma` declares the model. Tests are exempt so integration cleanup works.
+- ESLint (heuristic: aliases, destructuring and raw SQL are not caught) rejects `prisma.<model>` (also `tx.`/`this.prisma.`) outside the owning module's `infra/`; the owner is the module whose `prisma/schema/<module>.prisma` declares the model. Tests are exempt so they can delete the rows they create.
 
 ## What the database still guarantees
 
@@ -20,7 +20,7 @@ Whatever must change atomically lives in the same module. Transactions are per m
 
 ## Triggers
 
-Technical triggers inside a module (`updatedAt`, audit columns) are fine. Business rules live in code, where the in-memory tests can see them. Triggers that cross modules are forbidden: they are invisible coupling.
+Technical triggers inside a module (`updatedAt`, audit columns) are fine. Business rules live in code, where the tests and reviewers can see them. Triggers that cross modules are forbidden: they are invisible coupling.
 
 ## Considered Options
 

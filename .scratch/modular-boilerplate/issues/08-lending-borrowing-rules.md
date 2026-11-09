@@ -13,5 +13,5 @@
 - [ ] Returning a loan frees a slot so the member can borrow again up to the limit
 - [ ] After advancing the clock past a loan's DueDate, that member cannot borrow another book (409) until the overdue loan is returned
 - [ ] A member with only returned loans, or only non-overdue active loans, can borrow normally
-- [ ] Scenarios work with in-memory and real wiring
+- [ ] Scenarios pass against the real Postgres (`pnpm test`)
 - [ ] `pnpm typecheck && pnpm lint && pnpm test` pass
