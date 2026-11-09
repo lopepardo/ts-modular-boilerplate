@@ -4,12 +4,12 @@
 
 **Blocked by:** 05
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Borrowing an existing, non-retired book returns an active Loan with a DueDate exactly 14 days after the (fixed) clock time
-- [ ] Borrowing an unknown book returns 404
-- [ ] Borrowing a Retired book is refused with a 409 business error
-- [ ] `lending` reaches `catalog` only through its public entry point (lint passes)
-- [ ] The foreign key to Book with restrictive delete is part of the migration
-- [ ] Scenarios run with in-memory wiring and a controllable clock, and with the real wiring through `pnpm test:integration`
-- [ ] `pnpm typecheck && pnpm lint && pnpm test` pass
+- [x] Borrowing an existing, non-retired book returns an active Loan with a DueDate exactly 14 days after the (fixed) clock time
+- [x] Borrowing an unknown book returns 404
+- [x] Borrowing a Retired book is refused with a 409 business error
+- [x] `lending` reaches `catalog` only through its public entry point (lint passes)
+- [x] The foreign key to Book with restrictive delete is part of the migration
+- [x] Scenarios run with in-memory wiring and a controllable clock, and with the real wiring through `pnpm test:integration`
+- [x] `pnpm typecheck && pnpm lint && pnpm test` pass

@@ -1,0 +1,18 @@
+enum LoanStatus {
+  active
+  returned
+}
+
+model Loan {
+  id         String     @id
+  bookId     String
+  memberId   String
+  status     LoanStatus
+  borrowedAt DateTime
+  dueDate    DateTime
+
+  // Allowed across modules only toward the dependency, restrictive (ADR 0003).
+  book Book @relation(fields: [bookId], references: [id], onDelete: Restrict)
+
+  @@index([bookId])
+}

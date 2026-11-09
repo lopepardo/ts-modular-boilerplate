@@ -54,10 +54,27 @@ Takes the Book out of circulation. It stays in the catalog and can still be view
 
 Responses: `200` book with `"retired": true` · `400` `VALIDATION_ERROR` (id is not a uuid) · `404` `BOOK_NOT_FOUND`.
 
+### `POST /loans`
+
+A Member borrows a Book. Body: `{ "memberId", "bookId" }` (`memberId` is an opaque external id, a non-empty trimmed string up to 200 characters and not validated against any registry; `bookId` is a uuid). The Loan is `active` and its `dueDate` is 14 days after `borrowedAt`.
+
+```json
+{
+  "id": "uuid",
+  "bookId": "uuid",
+  "memberId": "member-1",
+  "status": "active",
+  "borrowedAt": "2026-03-01T10:00:00.000Z",
+  "dueDate": "2026-03-15T10:00:00.000Z"
+}
+```
+
+Responses: `201` loan · `400` `VALIDATION_ERROR` · `404` `BOOK_NOT_FOUND` · `409` `BOOK_RETIRED`.
+
 ### `GET /health`
 
 Responses: `200` `{ "status": "ok" }`.
 
 ## Pending
 
-TODO: document these endpoints once they are implemented (see `.scratch/modular-boilerplate/issues/`): the `lending` module (`POST /loans`, `GET /loans`, `GET /loans/:id`, `POST /loans/:id/return`).
+TODO: document these endpoints once they are implemented (see `.scratch/modular-boilerplate/issues/`): the rest of the `lending` module (`GET /loans`, `GET /loans/:id`, `POST /loans/:id/return`).

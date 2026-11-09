@@ -5,5 +5,8 @@ model Book {
   isbn    String
   retired Boolean @default(false)
 
+  // Back-relation required by Prisma for lending's foreign key; catalog never uses it.
+  loans Loan[]
+
   @@index([isbn])
 }

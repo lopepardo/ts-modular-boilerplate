@@ -1,6 +1,6 @@
 # ts-modular-boilerplate
 
-Boilerplate for an HTTP API organized as a feature-first modular monolith (ADR 0001–0003). The example domain is a library: `catalog` is implemented; `lending` is still to be built (see `.scratch/modular-boilerplate/`). Domain, code, docs and error messages are in **English**.
+Boilerplate for an HTTP API organized as a feature-first modular monolith (ADR 0001–0003). The example domain is a library: `catalog` is implemented; `lending` is being built (borrowing done; see `.scratch/modular-boilerplate/`). Domain, code, docs and error messages are in **English**.
 
 **Stack:** Node + TypeScript ESM (`nodenext`, `strict`), Fastify 5, Prisma 7 (`prisma-client` + `@prisma/adapter-pg`) on PostgreSQL 18, Zod 4, Vitest, ESLint (typescript-eslint type-checked) + Prettier, pnpm.
 
@@ -13,6 +13,7 @@ src/
   modules/<name>/    http/ application/ domain/ infra/ + index.ts (public entry point)
     _template/       copy-me module; deliberately not mounted in app.ts
     catalog/         books (simple module: use cases + repository)
+    lending/         loans (rich domain: Loan entity, DueDate value object; reaches catalog via a port wired in app.ts)
   platform/          config/env.ts, db/client.ts (+ generated/), http/ (createServer, errorHandler, errorMapper), logging/
   shared/            BusinessError and subclasses, Clock, IdGenerator
 prisma/schema/       one .prisma file per module (+ base.prisma); migrations/
