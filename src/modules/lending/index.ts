@@ -1,7 +1,7 @@
 import type { FastifyPluginAsync } from "fastify";
 
 import type { LendingDeps } from "./application/deps.js";
-import { borrowBookUseCase, type BorrowBook } from "./application/useCases/borrowBook.js";
+import { borrowBookUseCase } from "./application/useCases/borrowBook.js";
 import { loanRoutes } from "./http/routes.js";
 
 /*
@@ -14,17 +14,14 @@ export type { LoanRepository } from "./application/ports/loanRepository.js";
 export { createInMemoryLoanRepository } from "./infra/inMemoryLoanRepository.js";
 export { createPrismaLoanRepository } from "./infra/prismaLoanRepository.js";
 
+/** No other module consumes lending yet: expose a use case here when one does. */
 export type LendingModule = {
   routes: FastifyPluginAsync;
-  borrowBook: BorrowBook;
 };
 
 /** Public entry point of the lending module. */
 export const createLendingModule = (deps: LendingDeps): LendingModule => {
-  const borrowBook = borrowBookUseCase(deps);
-
   return {
-    routes: loanRoutes({ borrowBook }),
-    borrowBook,
+    routes: loanRoutes({ borrowBook: borrowBookUseCase(deps) }),
   };
 };
