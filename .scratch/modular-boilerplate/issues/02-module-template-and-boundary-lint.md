@@ -4,7 +4,7 @@
 
 **Blocked by:** 01
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] The template module exists as a copy-me scaffold and is deliberately not mounted in the app builder (it has no test of its own)
 - [x] `pnpm lint` fails when a module imports another module's internal files

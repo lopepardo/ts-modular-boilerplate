@@ -1,100 +1,16 @@
-import { afterAll, describe, expect, it } from "vitest";
-
 import { buildApp } from "../src/app.js";
+import { createInMemoryBookRepository } from "../src/modules/catalog/index.js";
+import { catalogScenarios } from "./support/catalogScenarios.js";
 import { fakePrisma } from "./support/fakePrisma.js";
 import { testConfig } from "./support/testConfig.js";
-import { createInMemoryBookRepository } from "../src/modules/catalog/index.js";
 
-type ErrorBody = { error: Record<string, unknown> };
-
-let nextId = 0;
-const app = await buildApp({
-  config: testConfig,
-  prisma: fakePrisma,
-  generateId: () => `00000000-0000-4000-8000-${String(++nextId).padStart(12, "0")}`,
-  catalog: { repository: createInMemoryBookRepository() },
-});
-
-const register = (payload: Record<string, unknown>) =>
-  app.inject({ method: "POST", url: "/books", payload });
-
-describe("catalog: register and view a book", () => {
-  afterAll(() => app.close());
-
-  it("registers a book that is not retired and returns it with an id", async () => {
-    const res = await register({
-      title: "  Dune ",
-      author: "Frank Herbert",
-      isbn: "978-0441172719",
-    });
-
-    expect(res.statusCode).toBe(201);
-    expect(res.json()).toEqual({
-      id: expect.any(String) as unknown,
-      title: "Dune",
-      author: "Frank Herbert",
-      isbn: "978-0441172719",
-      retired: false,
-    });
+catalogScenarios("in-memory", async () => {
+  let nextId = 0;
+  const app = await buildApp({
+    config: testConfig,
+    prisma: fakePrisma,
+    generateId: () => `00000000-0000-4000-8000-${String(++nextId).padStart(12, "0")}`,
+    catalog: { repository: createInMemoryBookRepository() },
   });
-
-  it("views a registered book with its details and retired state", async () => {
-    const created = (await register({ title: "Emma", author: "Jane Austen", isbn: "111" })).json<{
-      id: string;
-    }>();
-
-    const res = await app.inject({
-      method: "GET",
-      url: `/books/${created.id}`,
-    });
-
-    expect(res.statusCode).toBe(200);
-    expect(res.json()).toEqual({
-      id: created.id,
-      title: "Emma",
-      author: "Jane Austen",
-      isbn: "111",
-      retired: false,
-    });
-  });
-
-  it("returns 404 BOOK_NOT_FOUND for an unknown book", async () => {
-    const res = await app.inject({
-      method: "GET",
-      url: "/books/6f1c2b34-0000-4000-8000-000000000000",
-    });
-
-    expect(res.statusCode).toBe(404);
-    expect(res.json<ErrorBody>().error).toMatchObject({
-      code: "BOOK_NOT_FOUND",
-    });
-  });
-
-  it("returns 400 VALIDATION_ERROR for invalid input", async () => {
-    const res = await register({ title: " ", author: "A" });
-
-    expect(res.statusCode).toBe(400);
-    expect(res.json<ErrorBody>().error).toMatchObject({
-      code: "VALIDATION_ERROR",
-      details: expect.arrayContaining([
-        expect.objectContaining({ in: "body", path: "title" }),
-        expect.objectContaining({ in: "body", path: "isbn" }),
-      ]) as unknown,
-    });
-
-    const badId = await app.inject({ method: "GET", url: "/books/abc" });
-    expect(badId.statusCode).toBe(400);
-  });
-
-  it("registers two books with the same ISBN as two distinct Books", async () => {
-    const payload = { title: "Dune", author: "Frank Herbert", isbn: "222" };
-    const first = (await register(payload)).json<{ id: string }>();
-    const second = (await register(payload)).json<{ id: string }>();
-
-    expect(first.id).not.toBe(second.id);
-    for (const { id } of [first, second]) {
-      const res = await app.inject({ method: "GET", url: `/books/${id}` });
-      expect(res.statusCode).toBe(200);
-    }
-  });
+  return { app };
 });

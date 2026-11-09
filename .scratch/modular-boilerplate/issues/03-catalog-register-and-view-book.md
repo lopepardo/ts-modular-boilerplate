@@ -4,7 +4,7 @@
 
 **Blocked by:** 02
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] Registering a book returns it with an id and is not retired
 - [x] Viewing an existing book returns its details and retired state

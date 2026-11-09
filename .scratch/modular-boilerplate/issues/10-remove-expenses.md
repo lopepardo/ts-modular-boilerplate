@@ -4,7 +4,7 @@
 
 **Blocked by:** 03
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] No `expenses` code, tests, table or migration remains
 - [x] The migration history applies cleanly from an empty database and creates the `catalog` tables

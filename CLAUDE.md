@@ -52,13 +52,14 @@ pnpm db:migrate
 
 - `pnpm dev` — server with reload (`tsx watch`) on :3000
 - `pnpm test` — Vitest; one file: `pnpm test -- tests/catalog.test.ts`; one test: `pnpm test -- -t "name"`
+- `pnpm test:integration` — same scenarios as `pnpm test` against the real Prisma repositories on the local Postgres (needs `docker compose up -d postgres` + `pnpm db:migrate`); deletes only the rows it created
 - `pnpm typecheck` — `tsc --noEmit` (includes `tests/`)
 - `pnpm lint` / `pnpm format` — ESLint / Prettier
 - `pnpm db:generate` — after cloning and after every change to `prisma/schema/*.prisma`
 - `pnpm db:migrate` — `prisma migrate dev`
 - `pnpm build` / `pnpm start` — compile to `dist/` and run
 
-TODO: add `pnpm test:integration` (real Postgres) when issue 04 is done, and a "start a project from this template" note (issue 11).
+TODO: add a "start a project from this template" note (issue 11).
 
 ### Verification (before considering something done)
 

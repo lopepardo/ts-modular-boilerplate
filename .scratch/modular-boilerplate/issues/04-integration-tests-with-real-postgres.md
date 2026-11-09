@@ -4,10 +4,10 @@
 
 **Blocked by:** 03
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] A shared set of scenarios is executed with both in-memory and Prisma wiring without duplicating test cases
-- [ ] `pnpm test:integration` passes against the local Postgres and leaves it clean between runs
-- [ ] `pnpm test` runs without a database and does not execute the integration wiring
-- [ ] The way to run integration tests is documented where the other commands are listed
-- [ ] `pnpm typecheck && pnpm lint && pnpm test` pass
+- [x] A shared set of scenarios is executed with both in-memory and Prisma wiring without duplicating test cases
+- [x] `pnpm test:integration` passes against the local Postgres and leaves it clean between runs
+- [x] `pnpm test` runs without a database and does not execute the integration wiring
+- [x] The way to run integration tests is documented where the other commands are listed
+- [x] `pnpm typecheck && pnpm lint && pnpm test` pass

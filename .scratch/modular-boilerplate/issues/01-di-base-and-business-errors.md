@@ -4,7 +4,7 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] The app builder accepts dependency overrides and still works with no arguments
 - [x] A test builds the app with a fixed clock and an in-memory/fake dependency and drives it through `app.inject`
