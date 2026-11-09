@@ -1,0 +1,23 @@
+info:
+  name: List loans
+  type: http
+  seq: 2
+
+http:
+  method: GET
+  url: "{{baseUrl}}/loans?memberId=member-1&status=active"
+  params:
+    - name: memberId
+      value: member-1
+      type: query
+    - name: status
+      value: active
+      type: query
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

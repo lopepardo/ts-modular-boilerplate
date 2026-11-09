@@ -1,7 +1,7 @@
 {
   "name": "ts-modular-boilerplate",
   "version": "1.0.0",
-  "description": "",
+  "description": "Feature-first modular monolith boilerplate for a TypeScript HTTP API (Fastify, Prisma, PostgreSQL)",
   "scripts": {
     "dev": "tsx watch src/main.ts",
     "build": "tsc",

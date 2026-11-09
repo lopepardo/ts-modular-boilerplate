@@ -1,6 +1,6 @@
 # ts-modular-boilerplate
 
-Boilerplate for an HTTP API organized as a feature-first modular monolith (ADR 0001–0004). The example domain is a library: `catalog` is implemented; `lending` is being built (borrowing done; see `.scratch/modular-boilerplate/`). Domain, code, docs and error messages are in **English**.
+Boilerplate for an HTTP API organized as a feature-first modular monolith (ADR 0001–0004). The example domain is a library: `catalog` is implemented; `lending` is implemented too (borrow, return, rules, view/list). Domain, code, docs and error messages are in **English**.
 
 **Stack:** Node + TypeScript ESM (`nodenext`, `strict`), Fastify 5, Prisma 7 (`prisma-client` + `@prisma/adapter-pg`) on PostgreSQL 18, Zod 4, Vitest, ESLint (typescript-eslint type-checked) + Prettier, pnpm.
 
@@ -42,7 +42,7 @@ docker-compose.yml   local Postgres
 ### First time
 
 ```
-cp .env.example .env            # DB_PASSWORD is required by docker compose
+cp .env.example .env            # edit DB_PASSWORD (required by docker compose and prisma.config.ts)
 docker compose up -d postgres
 pnpm install
 pnpm db:generate                # mandatory: without it tsc/dev/lint fail
@@ -59,7 +59,11 @@ pnpm db:migrate
 - `pnpm db:migrate` — `prisma migrate dev`
 - `pnpm build` / `pnpm start` — compile to `dist/` and run
 
-TODO: add a "start a project from this template" note (issue 11).
+### Start a project from this template
+
+1. Delete the example modules `src/modules/catalog/` and `src/modules/lending/`, their `prisma/schema/{catalog,lending}.prisma` and migrations (regenerate with `pnpm db:migrate`), their `tests/*.test.ts`, the `docs/api/` collection and the matching sections of `docs/api.md`. Remove their wiring from `src/app.ts` and `tests/support/testApp.ts`.
+2. Copy `src/modules/_template/` to `src/modules/<name>/`, rename its files and exports, add `prisma/schema/<name>.prisma` (own Postgres schema, see `.claude/rules/prisma.md`) replace the template's in-memory repository with a Prisma one in `infra/`, and mount it in `src/app.ts`.
+3. Update `package.json` name, `.env.example`, `CONTEXT.md` and the ADRs to your domain.
 
 ### Verification (before considering something done)
 

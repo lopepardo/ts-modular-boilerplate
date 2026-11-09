@@ -4,12 +4,12 @@
 
 **Blocked by:** 04, 08, 09, 10
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] `CLAUDE.md` and `.claude/rules/` describe modules, layers, DI, boundaries and data ownership, consistent with ADR 0001–0004
-- [ ] The API contract document matches the implemented `catalog` and `lending` endpoints, status codes and error codes
-- [ ] The request collection covers the library endpoints
-- [ ] Package and project names are generic, with no references to "Gastos" or expenses
-- [ ] A fresh checkout following the documented first-time steps reaches a green `pnpm typecheck && pnpm lint && pnpm test`
-- [ ] A note explains how to start a project from the template: delete the example modules and copy the template module
-- [ ] The `apilibrary` defaults for `DB_USER`, `DB_NAME` (and `DB_PASSWORD`, if it keeps a default) in `src/platform/config/env.ts`, `prisma.config.ts` and `docker-compose.yml` are replaced by a generic name
+- [x] `CLAUDE.md` and `.claude/rules/` describe modules, layers, DI, boundaries and data ownership, consistent with ADR 0001–0004
+- [x] The API contract document matches the implemented `catalog` and `lending` endpoints, status codes and error codes
+- [x] The request collection covers the library endpoints
+- [x] Package and project names are generic, with no references to "Gastos" or expenses
+- [x] A fresh checkout following the documented first-time steps reaches a green `pnpm typecheck && pnpm lint && pnpm test`
+- [x] A note explains how to start a project from the template: delete the example modules and copy the template module
+- [x] The `apilibrary` defaults for `DB_USER`, `DB_NAME` (and `DB_PASSWORD`, if it keeps a default) in `src/platform/config/env.ts`, `prisma.config.ts` and `docker-compose.yml` are replaced by a generic name

@@ -1,0 +1,23 @@
+info:
+  name: Borrow book
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{baseUrl}}/loans"
+  body:
+    type: json
+    data: |-
+      {
+        "memberId": "member-1",
+        "bookId": "33b561f3-430e-4c33-bb95-9801170bcc7e"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
