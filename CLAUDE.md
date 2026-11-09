@@ -34,7 +34,7 @@ docker-compose.yml   local Postgres
 - **`BusinessError` + `errorHandler`:** business errors carry only `code` and `message`; `platform/http/errorMapper.ts` maps them to HTTP and keeps the format `{ error: { code, message, traceId } }`. Schema validation errors → 400 `VALIDATION_ERROR` (with `details`), `UnauthorizedError` → 401, `ForbiddenError` → 403, `NotFoundError` → 404, `ConflictError` → 409, other `BusinessError` → 422, anything else → 500. Handlers do not catch errors.
 - **`buildApp()` separate from `main.ts`:** allows tests with `app.inject` without opening a port.
 - **`platform/config/env.ts`:** fails fast (`process.exit(1)`) if the environment is invalid; `main.ts` passes the config down, the rest of the code never reads `process.env`.
-- **`docs/api.md`:** public contract; client and code must match it.
+- **`docs/api.md`:** public contract; client and code must match it. Known limitation: list endpoints (`GET /books`) are not paginated and return every row; add pagination (documented in `docs/api.md` first) before using a listing on a table with real data, and do not copy the pattern as is.
 - **Rules per layer:** details for application code, tests and Prisma live in `.claude/rules/` and load when touching those files. Full REST conventions: skill `api-conventions`.
 
 ## How do we work?

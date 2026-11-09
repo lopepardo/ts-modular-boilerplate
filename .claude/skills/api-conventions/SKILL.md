@@ -44,7 +44,7 @@ Business errors are thrown from use cases, with no HTTP knowledge: `throw new No
 
 ## Listings
 
-Filters are optional query params validated with Zod. There is no pagination yet; if you add it, document it in `docs/api.md` first, then implement it consistently across listings.
+Filters are optional query params validated with Zod. There is no pagination yet, so a listing returns every matching row: a known limitation of this boilerplate, not a pattern to copy onto a large table. Before using a listing with real data, add pagination: document it in `docs/api.md` first (it changes the response shape), then implement it consistently across listings. Do not silently cap results (e.g. a hidden `take: 100`): the client cannot tell that rows are missing.
 
 ## Checklist when changing the API
 
