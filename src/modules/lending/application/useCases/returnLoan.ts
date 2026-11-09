@@ -12,5 +12,5 @@ export const returnLoanUseCase =
     if (!loan) {
       throw new NotFoundError("LOAN_NOT_FOUND", `Loan ${id} not found`);
     }
-    return repository.save(giveBack(loan));
+    return repository.markReturned(giveBack(loan));
   };

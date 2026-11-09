@@ -60,20 +60,16 @@ export const createPrismaLoanRepository = (prisma: PrismaClient): LoanRepository
       });
       return rows.map(toLoan);
     },
-    save: async (loan: Loan) => {
-      const data = {
-        bookId: loan.bookId,
-        memberId: loan.memberId,
-        status: loan.status,
-        borrowedAt: loan.borrowedAt,
-        dueDate: loan.dueDate.value,
-      };
-      const row = await prisma.loan.upsert({
-        where: { id: loan.id },
-        create: { id: loan.id, ...data },
-        update: data,
+    markReturned: async (loan: Loan) => {
+      // Conditional update: of two concurrent returns, only one finds the Loan still `active`.
+      const { count } = await prisma.loan.updateMany({
+        where: { id: loan.id, status: "active" },
+        data: { status: "returned" },
       });
-      return toLoan(row);
+      if (count === 0) {
+        throw new ConflictError("LOAN_ALREADY_RETURNED", `Loan ${loan.id} is already returned`);
+      }
+      return loan;
     },
   };
 };

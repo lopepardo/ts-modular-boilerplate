@@ -15,5 +15,9 @@ export type LoanRepository = {
    */
   openLoan: (memberId: string, decide: (memberActiveLoans: Loan[]) => Loan) => Promise<Loan>;
   search: (filter: LoanFilter) => Promise<Loan[]>;
-  save: (loan: Loan) => Promise<Loan>;
+  /**
+   * Stores a Loan the domain just gave back (`giveBack`), only if it is still `active` in the
+   * database. Throws `LOAN_ALREADY_RETURNED` if a concurrent request returned it first.
+   */
+  markReturned: (loan: Loan) => Promise<Loan>;
 };

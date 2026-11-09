@@ -157,6 +157,19 @@ describe("lending: return a loan", () => {
     expect(res.json<ErrorBody>().error).toMatchObject({ code: "LOAN_ALREADY_RETURNED" });
   });
 
+  it("lets only one of several concurrent returns succeed, the rest get 409", async () => {
+    const loanId = await borrowLoan(await registerBook());
+
+    const results = await Promise.all(Array.from({ length: 5 }, () => giveBack(loanId)));
+
+    expect(results.filter((r) => r.statusCode === 200)).toHaveLength(1);
+    const refused = results.filter((r) => r.statusCode === 409);
+    expect(refused).toHaveLength(4);
+    for (const res of refused) {
+      expect(res.json<ErrorBody>().error).toMatchObject({ code: "LOAN_ALREADY_RETURNED" });
+    }
+  });
+
   it("returns 404 LOAN_NOT_FOUND for an unknown Loan", async () => {
     const res = await giveBack("6f1c2b34-0000-4000-8000-000000000000");
 

@@ -61,8 +61,8 @@ pnpm db:migrate
 
 ### Start a project from this template
 
-1. Delete the example modules `src/modules/catalog/` and `src/modules/lending/`, their `prisma/schema/{catalog,lending}.prisma` and migrations (regenerate with `pnpm db:migrate`), their `tests/*.test.ts`, the `docs/api/` collection and the matching sections of `docs/api.md`. Remove their wiring from `src/app.ts` and `tests/support/testApp.ts`.
-2. Copy `src/modules/_template/` to `src/modules/<name>/`, rename its files and exports, add `prisma/schema/<name>.prisma` (own Postgres schema, see `.claude/rules/prisma.md`) replace the template's in-memory repository with a Prisma one in `infra/`, and mount it in `src/app.ts`.
+1. Delete the example modules `src/modules/catalog/` and `src/modules/lending/`, their `prisma/schema/{catalog,lending}.prisma` and migrations (regenerate with `pnpm db:migrate`), their `tests/*.test.ts`, the `docs/api/` collection and the matching sections of `docs/api.md`. Remove their wiring from `src/app.ts`.
+2. Copy `src/modules/_template/` to `src/modules/<name>/`, rename its files and exports, add `prisma/schema/<name>.prisma` (own Postgres schema, see `.claude/rules/prisma.md`), replace the template's in-memory repository with a Prisma one in `infra/`, and mount it in `src/app.ts`.
 3. Update `package.json` name, `.env.example`, `CONTEXT.md` and the ADRs to your domain.
 
 ### Verification (before considering something done)
