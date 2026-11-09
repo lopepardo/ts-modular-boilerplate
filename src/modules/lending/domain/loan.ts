@@ -1,3 +1,4 @@
+import { ConflictError } from "../../../shared/errors.js";
 import { dueDateFrom, type DueDate } from "./dueDate.js";
 
 export type LoanStatus = "active" | "returned";
@@ -26,3 +27,11 @@ export const borrow = (input: {
   borrowedAt: input.now,
   dueDate: dueDateFrom(input.now),
 });
+
+/** Gives a Loan back: only an `active` Loan can be returned, and there is no way back. */
+export const giveBack = (loan: Loan): Loan => {
+  if (loan.status === "returned") {
+    throw new ConflictError("LOAN_ALREADY_RETURNED", `Loan ${loan.id} is already returned`);
+  }
+  return { ...loan, status: "returned" };
+};

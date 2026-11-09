@@ -6,6 +6,10 @@ import type { Loan } from "../domain/loan.js";
 /** Only touches the `Loan` table owned by this module (ADR 0003). */
 export const createPrismaLoanRepository = (prisma: PrismaClient): LoanRepository => {
   return {
+    findById: async (id: string) => {
+      const row = await prisma.loan.findUnique({ where: { id } });
+      return row && { ...row, dueDate: dueDateAt(row.dueDate) };
+    },
     save: async (loan: Loan) => {
       const data = {
         bookId: loan.bookId,

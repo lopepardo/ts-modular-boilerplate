@@ -2,6 +2,7 @@ import type { FastifyPluginAsync } from "fastify";
 
 import type { LendingDeps } from "./application/deps.js";
 import { borrowBookUseCase } from "./application/useCases/borrowBook.js";
+import { returnLoanUseCase } from "./application/useCases/returnLoan.js";
 import { loanRoutes } from "./http/routes.js";
 
 /*
@@ -20,6 +21,9 @@ export type LendingModule = {
 /** Public entry point of the lending module. */
 export const createLendingModule = (deps: LendingDeps): LendingModule => {
   return {
-    routes: loanRoutes({ borrowBook: borrowBookUseCase(deps) }),
+    routes: loanRoutes({
+      borrowBook: borrowBookUseCase(deps),
+      returnLoan: returnLoanUseCase(deps),
+    }),
   };
 };

@@ -4,11 +4,11 @@
 
 **Blocked by:** 06
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Returning an active loan marks it returned
-- [ ] Returning an already returned loan is refused with a 409 business error
-- [ ] Returning an unknown loan returns 404
-- [ ] Returning a loan succeeds even if its book has been retired since
-- [ ] Scenarios pass against the real Postgres (`pnpm test`)
-- [ ] `pnpm typecheck && pnpm lint && pnpm test` pass
+- [x] Returning an active loan marks it returned
+- [x] Returning an already returned loan is refused with a 409 business error
+- [x] Returning an unknown loan returns 404
+- [x] Returning a loan succeeds even if its book has been retired since
+- [x] Scenarios pass against the real Postgres (`pnpm test`)
+- [x] `pnpm typecheck && pnpm lint && pnpm test` pass

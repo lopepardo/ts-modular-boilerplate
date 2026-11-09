@@ -71,10 +71,16 @@ A Member borrows a Book. Body: `{ "memberId", "bookId" }` (`memberId` is an opaq
 
 Responses: `201` loan · `400` `VALIDATION_ERROR` · `404` `BOOK_NOT_FOUND` · `409` `BOOK_RETIRED`.
 
+### `POST /loans/:id/return`
+
+A Member returns a Loan: it moves from `active` to `returned`, with no way back. A Loan can be returned even if its Book was Retired after it was borrowed. No body.
+
+Responses: `200` loan with `"status": "returned"` (same shape as above) · `400` `VALIDATION_ERROR` (id is not a uuid) · `404` `LOAN_NOT_FOUND` · `409` `LOAN_ALREADY_RETURNED`.
+
 ### `GET /health`
 
 Responses: `200` `{ "status": "ok" }`.
 
 ## Pending
 
-TODO: document these endpoints once they are implemented (see `.scratch/modular-boilerplate/issues/`): the rest of the `lending` module (`GET /loans`, `GET /loans/:id`, `POST /loans/:id/return`).
+TODO: document these endpoints once they are implemented (see `.scratch/modular-boilerplate/issues/`): the rest of the `lending` module (`GET /loans`, `GET /loans/:id`).

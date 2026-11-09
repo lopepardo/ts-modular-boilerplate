@@ -6,6 +6,9 @@ export const NewLoanSchema = z.object({
   bookId: z.uuid(),
 });
 
+/** Path parameters of `/loans/:id`. */
+export const LoanParamsSchema = z.object({ id: z.uuid() });
+
 /** Response contract for a loan: the only shape that leaves the API. */
 export const LoanResponseSchema = z.object({
   id: z.string(),
