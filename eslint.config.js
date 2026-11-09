@@ -42,6 +42,16 @@ const internalsOf = (name) => ({
   message: `Import ${name} only through its public entry point (index.ts). See ADR 0001.`,
 });
 
+/**
+ * Modules never import each other, not even through `index.ts`. A module that
+ * needs another declares its own port in `application/ports`, and `app.ts`
+ * (the composition root) adapts the other module's public API to it.
+ */
+const anotherModule = (name) => ({
+  group: [`**/${name}/**`],
+  message: `Do not import module ${name}. Declare a port and wire it in app.ts. See ADR 0001.`,
+});
+
 /** `application` and `domain` must not depend on the Fastify/Prisma adapters. */
 const adapterLayers = {
   group: ["**/http", "**/http/**", "**/infra", "**/infra/**"],
@@ -52,6 +62,24 @@ const adapterLayers = {
 const platformLayer = {
   group: ["**/platform", "**/platform/**"],
   message: "application and domain code must not import from platform. See ADR 0001.",
+};
+
+/** Modules receive configuration through their deps; only `main.ts` reads the env. */
+const configLayer = {
+  group: ["**/platform/config", "**/platform/config/**"],
+  message: "modules must not import platform/config; receive values through deps. See ADR 0002.",
+};
+
+/** `http` talks to use cases, never to persistence directly. */
+const infraFromHttp = {
+  group: ["**/infra", "**/infra/**"],
+  message: "http code must not import from infra; go through the use cases. See ADR 0001.",
+};
+
+/** Shared infrastructure sits below the modules: it cannot depend on any of them. */
+const modulesFromInfrastructure = {
+  group: ["**/modules", "**/modules/**"],
+  message: "platform and shared must not import modules; the composition root wires them.",
 };
 
 /** `domain` is the innermost layer: it cannot see `application`. */
@@ -97,7 +125,8 @@ const restrict = (patterns) => ({
 });
 
 /** Patterns for "every other module's internals", seen from `name`. */
-const otherModulesInternals = (name) => modules.filter((other) => other !== name).map(internalsOf);
+const otherModulesInternals = (name) =>
+  modules.filter((other) => other !== name).map(anotherModule);
 
 /**
  * Per-module boundary configs, from least to most strict:
@@ -110,7 +139,11 @@ const moduleBoundaries = modules.flatMap((name) => {
   return [
     {
       files: [`src/modules/${name}/**/*.ts`],
-      rules: restrict(others),
+      rules: restrict([...others, configLayer]),
+    },
+    {
+      files: [`src/modules/${name}/http/**/*.ts`],
+      rules: restrict([...others, configLayer, infraFromHttp]),
     },
     {
       files: [`src/modules/${name}/application/**/*.ts`],
@@ -130,6 +163,12 @@ const moduleBoundaries = modules.flatMap((name) => {
 const outsideModulesBoundary = {
   files: ["src/app.ts", "src/main.ts", "tests/**/*.ts"],
   rules: restrict(modules.map(internalsOf)),
+};
+
+/** platform/ and shared/ must not know about modules at all. */
+const infrastructureBoundary = {
+  files: ["src/platform/**/*.ts", "src/shared/**/*.ts"],
+  rules: restrict([modulesFromInfrastructure]),
 };
 
 // ---------------------------------------------------------------------------
@@ -186,5 +225,6 @@ export default [
   ...typescriptPresets,
   typescriptProject,
   outsideModulesBoundary,
+  infrastructureBoundary,
   ...moduleBoundaries,
 ];

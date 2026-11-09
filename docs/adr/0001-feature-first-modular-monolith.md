@@ -10,4 +10,6 @@ Code is organized as `src/modules/<module>/{http,application,domain,infra}` inst
 ## Consequences
 
 - A module starts simple (use cases + repository) and is promoted to a rich domain (classes with state) when a real invariant appears.
-- A module depends on another only through its public API, synchronously. Domain events are out of scope until a project needs them.
+- Modules never import each other, not even through `index.ts` (ESLint enforces it, verified in `tests/architecture-rules.test.ts`). When module A needs something from module B, A declares a port in its own `application/ports/` with types of its own, and `app.ts` (the composition root) implements that port by calling B's public use cases. The dependency direction is therefore visible in one place, cycles cannot exist in code, and A's tests just replace the port.
+- A module's `index.ts` is consumed only by `app.ts` and tests: the module factory, the use cases that may be adapted, and the repository implementations to choose from. Domain entities are not exported.
+- Calls between modules are synchronous and in-process. Domain events are out of scope until a project needs them.

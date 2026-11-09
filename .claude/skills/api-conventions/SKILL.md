@@ -20,7 +20,7 @@ Reference implementation: `src/modules/catalog/` (`http/routes.ts`, `application
 - `application/`: `useCases/` (factory functions that receive their dependencies), `ports/` (repository interfaces) and `deps.ts` (the module's dependency type). Entities live in `domain/`. No Fastify, Zod or Prisma imports.
 - `domain/`: entities and rules, only once the module has real invariants.
 - `infra/`: Prisma and in-memory repository implementations.
-- `index.ts`: the module's only public entry point; other modules import nothing else.
+- `index.ts`: the module's only public entry point, used by `app.ts` and tests. Modules never import each other: to use another module, declare a port in `application/ports/` and adapt it in `app.ts`.
 - With `exactOptionalPropertyTypes`, never pass `undefined` to optional props; use conditional spread.
 
 ## Status codes
