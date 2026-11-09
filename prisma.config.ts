@@ -1,12 +1,7 @@
 import "dotenv/config";
 import { defineConfig } from "prisma/config";
 
-const {
-  DB_USER = "app",
-  DB_HOST = "localhost",
-  DB_PORT = "5432",
-  DB_NAME = "app",
-} = process.env;
+const { DB_USER = "app", DB_HOST = "localhost", DB_PORT = "5432", DB_NAME = "app" } = process.env;
 
 const { DB_PASSWORD } = process.env;
 if (!DB_PASSWORD) {
