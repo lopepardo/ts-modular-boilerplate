@@ -12,5 +12,5 @@
 - [x] No endpoint or use case deletes a book
 - [x] The public entry point exposes the existence/retired query and nothing from `domain` or `infra`
 - [x] `pnpm lint` fails when a module reads or writes another module's tables (demonstrated on a deliberate violation, then removed)
-- [x] Scenarios work with in-memory wiring and, once ticket 04 exists, with the real wiring
+- [x] Scenarios run against the real Prisma wiring on Postgres
 - [x] `pnpm typecheck && pnpm lint && pnpm test` pass

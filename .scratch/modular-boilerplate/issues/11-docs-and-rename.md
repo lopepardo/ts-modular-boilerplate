@@ -1,6 +1,6 @@
 # 11: Documentation and project rename
 
-**What to build:** The project documentation describes the new structure: `CLAUDE.md` (folder map, why each part exists, commands including `pnpm test:integration`), the layer rules under `.claude/rules/`, the API contract document, and the manual request collection, all matching the library endpoints and error codes actually implemented. The project takes a generic name. Documentation, code, domain and error messages are all written in English. The first-time setup commands work from a fresh checkout.
+**What to build:** The project documentation describes the new structure: `CLAUDE.md` (folder map, why each part exists, commands, including that `pnpm test` runs against real Postgres), the layer rules under `.claude/rules/`, the API contract document, and the manual request collection, all matching the library endpoints and error codes actually implemented. The project takes a generic name. Documentation, code, domain and error messages are all written in English. The first-time setup commands work from a fresh checkout.
 
 **Blocked by:** 04, 08, 09, 10
 

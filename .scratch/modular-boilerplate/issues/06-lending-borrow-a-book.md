@@ -11,5 +11,5 @@
 - [x] Borrowing a Retired book is refused with a 409 business error
 - [x] `lending` reaches `catalog` only through its public entry point (lint passes)
 - [x] `Loan.bookId` is a plain indexed column: no foreign key or relation to Book (ADR 0003)
-- [x] Scenarios run with in-memory wiring and a controllable clock, and with the real wiring through `pnpm test:integration`
+- [x] Scenarios run through `pnpm test` against the real Prisma wiring on Postgres, with a controllable clock
 - [x] `pnpm typecheck && pnpm lint && pnpm test` pass

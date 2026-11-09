@@ -26,15 +26,15 @@ Turn the repo into a boilerplate (GitHub template repository) for an HTTP API wi
 12. As a developer, I want use cases to be built with factory functions that receive their dependencies, so that I can test them without mocking modules.
 13. As a developer, I want a single composition root that wires the database client, the repositories and the modules together, so that there is exactly one place that creates concrete dependencies.
 14. As a developer, I want implicit dependencies such as the clock and id generation to be injected too, so that tests are deterministic.
-15. As a developer, I want data access to go through a repository declared by the application layer and implemented with Prisma, so that I can swap it for an in-memory fake in tests.
+15. As a developer, I want data access to go through a repository declared by the application layer and implemented with Prisma, so that the persistence technology stays behind a port.
 16. As a developer, I want business errors to carry a code and a message without knowing anything about HTTP, so that the domain does not depend on status codes.
 17. As an API client, I want every error to keep the shape `{ error: { code, message, traceId } }`, so that clients handle failures uniformly.
 18. As an API client, I want validation failures to return 400 `VALIDATION_ERROR` with details, so that I can show field-level feedback.
 19. As a developer, I want the shared database to have one Prisma schema file per module, so that each module's tables are easy to find.
 20. As a developer, I want each module's tables in their own Postgres schema with no foreign keys or relations between modules (ids only), so that a module can be extracted with its data and modules stay decoupled in the schema too.
 21. As a developer, I want `pnpm test` to run without a database, so that the feedback loop is fast.
-22. As a developer, I want `pnpm test:integration` to run the same HTTP scenarios against a real Postgres, so that migrations, foreign keys and the Prisma mapping are verified.
-23. As a developer, I want each test scenario written once and executed with both in-memory and real wiring, so that I do not maintain two suites.
+22. As a developer, I want `pnpm test` to run the HTTP scenarios against a real Postgres, so that migrations, constraints and the Prisma mapping are verified.
+23. As a developer, I want a single test wiring (real Postgres, no in-memory repositories), so that I do not maintain two suites.
 24. As a developer, I want `pnpm typecheck && pnpm lint && pnpm test` to pass on a fresh checkout, so that I trust the template.
 25. As a developer, I want `CLAUDE.md`, the layer rules, the API docs and the request collection to describe the new structure, so that agents and humans work from accurate instructions.
 26. As a librarian, I want to register a book with title, author and ISBN, so that it becomes available in the catalog.
@@ -82,8 +82,7 @@ Turn the repo into a boilerplate (GitHub template repository) for an HTTP API wi
 
 - **What makes a good test.** It exercises external behavior only: HTTP request in, status/body out (and, for integration, persisted state observed through the API). It never asserts on internal calls, private state or which collaborators were invoked.
 - **Single seam.** The application is built through the app builder with injectable dependencies and driven with `app.inject`. This is the same seam used by the existing tests, now with dependencies passed in.
-- **Default wiring (`pnpm test`).** In-memory repositories and a fixed, controllable clock. No database. Covers every rule in `CONTEXT.md` end to end through HTTP: the 3-loan limit, one active loan per book, the overdue block, retired books (cannot be borrowed, can still be returned), double return, due date at 14 days, derived overdue when the clock advances.
-- **Integration wiring (`pnpm test:integration`).** The same scenarios run against the real Prisma repositories on the local Postgres. Verifies migrations, the database constraints (such as the one-active-loan-per-book index) and the entity-to-row mapping. Scenarios are written once and shared by both wirings.
+- **Wiring (`pnpm test`).** Real Prisma repositories on the local Postgres and a fixed, controllable clock; only `generateId` and `clock` are injected. No in-memory repositories. Covers every rule in `CONTEXT.md` end to end through HTTP: the 3-loan limit, one active loan per book, the overdue block, retired books (cannot be borrowed, can still be returned), double return, due date at 14 days, derived overdue when the clock advances. Verifies migrations, database constraints (such as the one-active-loan-per-book index) and the entity-to-row mapping. Each test deletes only the rows it created.
 - **No dedicated unit seams by default.** Isolated tests of `Loan` or `DueDate` are added only if a rule has so many combinations that covering it through HTTP is impractical; that call is made while implementing `lending`.
 - **Lint as a check.** Module boundary and table-access rules are verified by `pnpm lint`, not by tests.
 - **Prior art.** The existing `app.inject`-based tests for health and expenses, and the "tests without a database" convention in the current test rules.
