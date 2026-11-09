@@ -4,7 +4,7 @@ import type { LendingDeps } from "../deps.js";
 
 export type BorrowBook = (input: { memberId: string; bookId: string }) => Promise<Loan>;
 
-/** A Member borrows a Book that exists and is not Retired. */
+/** A Member borrows a Book that exists, is not Retired and has no active Loan, within the Member rules. */
 export const borrowBookUseCase =
   ({
     repository,
@@ -21,5 +21,7 @@ export const borrowBookUseCase =
       throw new ConflictError("BOOK_RETIRED", `Book ${bookId} is retired and cannot be lent`);
     }
 
-    return repository.save(borrow({ id: generateId(), bookId, memberId, now: clock.now() }));
+    return repository.openLoan(memberId, (memberActiveLoans) =>
+      borrow({ id: generateId(), bookId, memberId, now: clock.now() }, memberActiveLoans),
+    );
   };

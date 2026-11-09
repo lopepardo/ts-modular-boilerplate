@@ -69,7 +69,9 @@ A Member borrows a Book. Body: `{ "memberId", "bookId" }` (`memberId` is an opaq
 }
 ```
 
-Responses: `201` loan · `400` `VALIDATION_ERROR` · `404` `BOOK_NOT_FOUND` · `409` `BOOK_RETIRED`.
+A Book has at most one `active` Loan; a Member has at most 3 `active` Loans (returned ones do not count) and cannot borrow while any of their active Loans is Overdue (its `dueDate` has passed; derived from the clock, never stored). The rules hold under concurrent requests.
+
+Responses: `201` loan · `400` `VALIDATION_ERROR` · `404` `BOOK_NOT_FOUND` · `409` `BOOK_RETIRED`, `BOOK_ALREADY_LOANED`, `LOAN_LIMIT_REACHED` or `MEMBER_HAS_OVERDUE_LOANS`.
 
 ### `POST /loans/:id/return`
 

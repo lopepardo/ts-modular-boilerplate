@@ -6,12 +6,12 @@
 
 **Blocked by:** 07
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Borrowing a book that already has an active loan is refused with a 409 business error
-- [ ] A member's fourth simultaneous active loan is refused with a 409 business error
-- [ ] Returning a loan frees a slot so the member can borrow again up to the limit
-- [ ] After advancing the clock past a loan's DueDate, that member cannot borrow another book (409) until the overdue loan is returned
-- [ ] A member with only returned loans, or only non-overdue active loans, can borrow normally
-- [ ] Scenarios pass against the real Postgres (`pnpm test`)
-- [ ] `pnpm typecheck && pnpm lint && pnpm test` pass
+- [x] Borrowing a book that already has an active loan is refused with a 409 business error
+- [x] A member's fourth simultaneous active loan is refused with a 409 business error
+- [x] Returning a loan frees a slot so the member can borrow again up to the limit
+- [x] After advancing the clock past a loan's DueDate, that member cannot borrow another book (409) until the overdue loan is returned
+- [x] A member with only returned loans, or only non-overdue active loans, can borrow normally
+- [x] Scenarios pass against the real Postgres (`pnpm test`)
+- [x] `pnpm typecheck && pnpm lint && pnpm test` pass

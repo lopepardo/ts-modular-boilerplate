@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { createFakeClock } from "./support/fakeClock.js";
 import { createTestApp } from "./support/testApp.js";
@@ -178,6 +178,127 @@ describe("lending: return a loan", () => {
 
     expect(res.statusCode).toBe(200);
     expect(res.json<{ status: string }>().status).toBe("returned");
+  });
+});
+
+describe("lending: borrowing rules", () => {
+  let wiring: Awaited<ReturnType<typeof setup>>;
+  let app: App;
+  let clock: ReturnType<typeof createFakeClock>;
+
+  beforeAll(async () => {
+    clock = createFakeClock(FIXED_NOW);
+    wiring = await createTestApp({
+      clock,
+      purge: async (prisma, ids) => {
+        await prisma.loan.deleteMany({ where: { id: { in: ids } } });
+        await prisma.book.deleteMany({ where: { id: { in: ids } } });
+      },
+    });
+    app = wiring.app;
+  });
+
+  beforeEach(() => {
+    clock.set(FIXED_NOW);
+  });
+
+  afterAll(async () => {
+    await wiring.cleanup();
+  });
+
+  const registerBook = async () =>
+    (
+      await app.inject({
+        method: "POST",
+        url: "/books",
+        payload: { title: "Dune", author: "Frank Herbert", isbn: "978-0441172719" },
+      })
+    ).json<{ id: string }>().id;
+  const borrow = (memberId: string, bookId: string) =>
+    app.inject({ method: "POST", url: "/loans", payload: { memberId, bookId } });
+  const borrowNew = async (memberId: string) => borrow(memberId, await registerBook());
+  const giveBack = (id: string) => app.inject({ method: "POST", url: `/loans/${id}/return` });
+  const errorCode = (res: { json: <T>() => T }) => res.json<ErrorBody>().error["code"];
+
+  it("refuses a Book that already has an active Loan with 409 BOOK_ALREADY_LOANED", async () => {
+    const bookId = await registerBook();
+    await borrow("member-a", bookId);
+
+    const res = await borrow("member-b", bookId);
+
+    expect(res.statusCode).toBe(409);
+    expect(errorCode(res)).toBe("BOOK_ALREADY_LOANED");
+  });
+
+  it("lets a Book be borrowed again once its Loan was returned", async () => {
+    const bookId = await registerBook();
+    const first = await borrow("member-a", bookId);
+    await giveBack(first.json<{ id: string }>().id);
+
+    expect((await borrow("member-b", bookId)).statusCode).toBe(201);
+  });
+
+  it("refuses a Member's fourth active Loan with 409 LOAN_LIMIT_REACHED", async () => {
+    for (let i = 0; i < 3; i++) {
+      expect((await borrowNew("member-limit")).statusCode).toBe(201);
+    }
+
+    const res = await borrowNew("member-limit");
+
+    expect(res.statusCode).toBe(409);
+    expect(errorCode(res)).toBe("LOAN_LIMIT_REACHED");
+  });
+
+  it("frees a slot when a Loan is returned", async () => {
+    const loans = [];
+    for (let i = 0; i < 3; i++) {
+      loans.push((await borrowNew("member-free")).json<{ id: string }>().id);
+    }
+    expect((await borrowNew("member-free")).statusCode).toBe(409);
+
+    await giveBack(loans[0] as string);
+
+    expect((await borrowNew("member-free")).statusCode).toBe(201);
+  });
+
+  it("holds the limit and the one-active-per-Book rule under concurrent requests", async () => {
+    const results = await Promise.all(
+      Array.from({ length: 6 }, async () => borrowNew("member-race")),
+    );
+    expect(results.filter((r) => r.statusCode === 201)).toHaveLength(3);
+    expect(results.filter((r) => r.statusCode === 409)).toHaveLength(3);
+
+    const bookId = await registerBook();
+    const same = await Promise.all(
+      ["race-1", "race-2", "race-3", "race-4"].map((m) => borrow(m, bookId)),
+    );
+    expect(same.filter((r) => r.statusCode === 201)).toHaveLength(1);
+    expect(same.filter((r) => r.statusCode === 409)).toHaveLength(3);
+  });
+
+  it("blocks a Member with an Overdue Loan until it is returned", async () => {
+    const overdue = (await borrowNew("member-late")).json<{ id: string }>().id;
+
+    // Exactly on the DueDate the Loan is not overdue yet; one millisecond later it is.
+    clock.set(new Date("2026-03-15T10:00:00.000Z"));
+    expect((await borrowNew("member-late")).statusCode).toBe(201);
+    clock.set(new Date("2026-03-15T10:00:00.001Z"));
+    const blocked = await borrowNew("member-late");
+    expect(blocked.statusCode).toBe(409);
+    expect(errorCode(blocked)).toBe("MEMBER_HAS_OVERDUE_LOANS");
+
+    await giveBack(overdue);
+    // The second Loan (due 14 days after its own start) is still not overdue.
+    expect((await borrowNew("member-late")).statusCode).toBe(201);
+  });
+
+  it("lets a Member with only returned or non-overdue Loans borrow", async () => {
+    const returned = (await borrowNew("member-ok")).json<{ id: string }>().id;
+    await giveBack(returned);
+    clock.set(new Date("2026-06-01T10:00:00.000Z"));
+
+    expect((await borrowNew("member-ok")).statusCode).toBe(201);
+    expect((await borrowNew("member-ok")).statusCode).toBe(201);
   });
 });
 
