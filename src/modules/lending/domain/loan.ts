@@ -3,7 +3,7 @@ import { dueDateFrom, type DueDate } from "./dueDate.js";
 
 export type LoanStatus = "active" | "returned";
 
-/** The lending of a Book to a Member (see `CONTEXT.md`). */
+/** The lending of a Book to a Member. */
 export type Loan = {
   id: string;
   bookId: string;
