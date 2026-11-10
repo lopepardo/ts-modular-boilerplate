@@ -2,7 +2,7 @@ import type { PrismaClient } from "../../../platform/db/generated/client.js";
 import type { BookRepository } from "../application/ports/bookRepository.js";
 import type { Book } from "../domain/book.js";
 
-/** Only touches the `Book` table owned by this module (ADR 0003). */
+/** Only touches the `Book` table owned by this module. */
 export const createPrismaBookRepository = (prisma: PrismaClient): BookRepository => {
   return {
     save: (book: Book) => {

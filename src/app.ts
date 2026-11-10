@@ -16,10 +16,7 @@ export type AppDeps = {
   clock?: Clock;
 };
 
-/**
- * Composition root (ADR 0002): wires modules to their infrastructure.
- * `_template` is deliberately not mounted: it is a copy-me example.
- */
+/** Composition root: wires modules to their infrastructure. */
 export const buildApp = async (deps: AppDeps) => {
   const { config, prisma, generateId = uuidGenerator, clock = systemClock } = deps;
 

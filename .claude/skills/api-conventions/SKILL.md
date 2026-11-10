@@ -4,7 +4,7 @@ description: REST conventions for this modular API (routes, JSON shape, validati
 disable-model-invocation: true
 ---
 
-Reference implementation: `src/modules/catalog/` (`http/routes.ts`, `application/useCases/registerBook.ts`, `index.ts`), wired in `src/app.ts`. Starting point for a new module: `src/modules/_template/`. Public contract: `docs/api.md`.
+Reference implementation: `src/modules/catalog/` (`http/routes.ts`, `application/useCases/registerBook.ts`, `index.ts`), wired in `src/app.ts`. To start a new module, copy `src/modules/catalog/` (the simple module) and adapt it. Public contract: `docs/api.md`.
 
 ## Naming
 

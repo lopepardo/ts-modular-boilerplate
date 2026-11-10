@@ -84,34 +84,37 @@ describe.skipIf(modules.length === 0)("module boundary rules", () => {
   });
 });
 
-// ADR 0003: each module is the only reader/writer of its tables. The owner of
+// Table ownership: each module is the only reader/writer of its tables. The owner of
 // a model is the module whose prisma/schema/<module>.prisma declares it.
 const tableViolations = async (filePath: string, code: string) => {
   const [result] = await eslint.lintText(code, { filePath });
   return (result?.messages ?? []).filter((m) => m.ruleId === "no-restricted-syntax");
 };
 
-describe.skipIf(!modules.includes("catalog"))("table ownership rules (ADR 0003)", () => {
-  const read = "const books = await prisma.book.findMany();";
+describe.skipIf(!modules.includes("catalog") || !modules.includes("lending"))(
+  "table ownership rules",
+  () => {
+    const read = "const books = await prisma.book.findMany();";
 
-  it.each([
-    ["src/app.ts", read],
-    ["src/platform/http/x.ts", read],
-    ["src/modules/catalog/application/x.ts", read],
-    ["src/modules/catalog/http/x.ts", read],
-    ["src/modules/_template/infra/x.ts", read],
-    ["src/modules/_template/infra/x.ts", "const books = await tx.book.findMany();"],
-    ["src/modules/_template/infra/x.ts", "await this.prisma.book.deleteMany();"],
-  ])("rejects %s -> %s", async (file, code) => {
-    expect(await tableViolations(file, code)).not.toHaveLength(0);
-  });
+    it.each([
+      ["src/app.ts", read],
+      ["src/platform/http/x.ts", read],
+      ["src/modules/catalog/application/x.ts", read],
+      ["src/modules/catalog/http/x.ts", read],
+      ["src/modules/lending/infra/x.ts", read],
+      ["src/modules/lending/infra/x.ts", "const books = await tx.book.findMany();"],
+      ["src/modules/lending/infra/x.ts", "await this.prisma.book.deleteMany();"],
+    ])("rejects %s -> %s", async (file, code) => {
+      expect(await tableViolations(file, code)).not.toHaveLength(0);
+    });
 
-  it.each([
-    ["src/modules/catalog/infra/x.ts", read],
-    ["src/modules/catalog/infra/x.ts", "const books = await tx.book.findMany();"],
-    ["src/modules/_template/infra/x.ts", "const rows = await prisma.example.findMany();"],
-    ["src/app.ts", "const book = deps.book;"],
-  ])("allows %s -> %s", async (file, code) => {
-    expect(await tableViolations(file, code)).toHaveLength(0);
-  });
-});
+    it.each([
+      ["src/modules/catalog/infra/x.ts", read],
+      ["src/modules/catalog/infra/x.ts", "const books = await tx.book.findMany();"],
+      ["src/modules/lending/infra/x.ts", "const loans = await prisma.loan.findMany();"],
+      ["src/app.ts", "const book = deps.book;"],
+    ])("allows %s -> %s", async (file, code) => {
+      expect(await tableViolations(file, code)).toHaveLength(0);
+    });
+  },
+);

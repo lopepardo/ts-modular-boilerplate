@@ -4,7 +4,7 @@ generator client {
   previewFeatures = ["partialIndexes"]
 }
 
-// One Postgres schema per module (ADR 0003). Add a module's schema name here
+// One Postgres schema per module. Add a module's schema name here
 // when you create it.
 datasource db {
   provider = "postgresql"

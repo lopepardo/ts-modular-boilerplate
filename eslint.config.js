@@ -3,9 +3,9 @@
  *
  * Layout of this file (top to bottom):
  *   1. Discovery      – which modules exist under src/modules
- *   2. Import rules   – reusable "forbidden import" patterns (ADR 0001)
+ *   2. Import rules   – reusable "forbidden import" patterns
  *   3. Rule builders  – turn patterns into per-module / per-layer configs
- *   4. Table ownership – only a module's infra touches its Prisma models (ADR 0003)
+ *   4. Table ownership – only a module's infra touches its Prisma models
  *   5. Base config    – ignores, recommended presets, TypeScript style rules
  *   6. Export         – everything assembled in order
  *
@@ -21,7 +21,7 @@ import tseslint from "typescript-eslint";
 
 const modulesDir = `${import.meta.dirname}/src/modules`;
 
-/** Every folder in src/modules is a module (including `_template`). */
+/** Every folder in src/modules is a module. */
 const modules = readdirSync(modulesDir, { withFileTypes: true })
   .filter((entry) => entry.isDirectory())
   .map((entry) => entry.name);
@@ -30,7 +30,7 @@ const modules = readdirSync(modulesDir, { withFileTypes: true })
 const tsFiles = ["src/**/*.ts", "tests/**/*.ts"];
 
 // ---------------------------------------------------------------------------
-// 2. Import rules (ADR 0001)
+// 2. Import rules
 //    Each constant is one `no-restricted-imports` pattern.
 // ---------------------------------------------------------------------------
 
@@ -40,7 +40,7 @@ const tsFiles = ["src/**/*.ts", "tests/**/*.ts"];
  */
 const internalsOf = (name) => ({
   group: [`**/${name}/**`, `!**/${name}/index.js`],
-  message: `Import ${name} only through its public entry point (index.ts). See ADR 0001.`,
+  message: `Import ${name} only through its public entry point (index.ts).`,
 });
 
 /**
@@ -50,31 +50,31 @@ const internalsOf = (name) => ({
  */
 const anotherModule = (name) => ({
   group: [`**/${name}/**`],
-  message: `Do not import module ${name}. Declare a port and wire it in app.ts. See ADR 0001.`,
+  message: `Do not import module ${name}. Declare a port and wire it in app.ts.`,
 });
 
 /** `application` and `domain` must not depend on the Fastify/Prisma adapters. */
 const adapterLayers = {
   group: ["**/http", "**/http/**", "**/infra", "**/infra/**"],
-  message: "application and domain code must not import from http or infra. See ADR 0001.",
+  message: "application and domain code must not import from http or infra.",
 };
 
 /** `application` and `domain` must not depend on platform (config, db, ...). */
 const platformLayer = {
   group: ["**/platform", "**/platform/**"],
-  message: "application and domain code must not import from platform. See ADR 0001.",
+  message: "application and domain code must not import from platform.",
 };
 
 /** Modules receive configuration through their deps; only `main.ts` reads the env. */
 const configLayer = {
   group: ["**/platform/config", "**/platform/config/**"],
-  message: "modules must not import platform/config; receive values through deps. See ADR 0002.",
+  message: "modules must not import platform/config; receive values through deps.",
 };
 
 /** `http` talks to use cases, never to persistence directly. */
 const infraFromHttp = {
   group: ["**/infra", "**/infra/**"],
-  message: "http code must not import from infra; go through the use cases. See ADR 0001.",
+  message: "http code must not import from infra; go through the use cases.",
 };
 
 /** Shared infrastructure sits below the modules: it cannot depend on any of them. */
@@ -86,7 +86,7 @@ const modulesFromInfrastructure = {
 /** `domain` is the innermost layer: it cannot see `application`. */
 const innerLayer = {
   group: ["**/application", "**/application/**"],
-  message: "domain code must not import from application. See ADR 0001.",
+  message: "domain code must not import from application.",
 };
 
 /**
@@ -107,7 +107,7 @@ const vendorPackages = {
     "zod/**",
   ],
   message:
-    "fastify, prisma, pg and zod packages belong in http or infra, not in application/domain. See ADR 0001.",
+    "fastify, prisma, pg and zod packages belong in http or infra, not in application/domain.",
 };
 
 // ---------------------------------------------------------------------------
@@ -173,7 +173,7 @@ const infrastructureBoundary = {
 };
 
 // ---------------------------------------------------------------------------
-// 4. Table ownership (ADR 0003)
+// 4. Table ownership
 //    prisma/schema/<module>.prisma declares the models a module owns. Only
 //    that module's `infra/` may use the matching client delegate
 //    (`prisma.book`, `tx.book`, `this.prisma.book`). Tests are exempt so
@@ -203,7 +203,7 @@ const clientNames = "/^(prisma|tx|db|client)$/";
 /** Selector for `<client>.<delegate>` and `this.<client>.<delegate>`. */
 const touchesTable = (model) => ({
   selector: `MemberExpression[property.name='${delegateName(model)}']:matches([object.name=${clientNames}], [object.property.name=${clientNames}])`,
-  message: `Table ${model} belongs to another module; use that module's public API. See ADR 0003.`,
+  message: `Table ${model} belongs to another module; use that module's public API.`,
 });
 
 /** An empty list must switch the rule off: severity alone would inherit the previous options. */

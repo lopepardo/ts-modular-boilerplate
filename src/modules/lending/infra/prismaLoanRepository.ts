@@ -4,7 +4,7 @@ import type { LoanRepository } from "../application/ports/loanRepository.js";
 import { dueDateAt } from "../domain/dueDate.js";
 import type { Loan } from "../domain/loan.js";
 
-/** Only touches the `Loan` table owned by this module (ADR 0003). */
+/** Only touches the `Loan` table owned by this module. */
 export const createPrismaLoanRepository = (prisma: PrismaClient): LoanRepository => {
   const toLoan = (row: Omit<Loan, "dueDate"> & { dueDate: Date }): Loan => ({
     ...row,

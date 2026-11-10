@@ -10,7 +10,7 @@ import { bookRoutes } from "./http/routes.js";
 
 /*
  * Public surface, consumed only by the composition root (app.ts) and tests:
- * modules never import each other (ADR 0001). Entities from `domain` are not
+ * modules never import each other. Entities from `domain` are not
  * exported; callers get them through the use cases' return types.
  */
 export type { BookStatus } from "./application/useCases/getBookStatus.js";

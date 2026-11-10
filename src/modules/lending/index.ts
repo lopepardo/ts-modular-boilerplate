@@ -9,7 +9,7 @@ import { loanRoutes } from "./http/routes.js";
 
 /*
  * Public surface, consumed only by the composition root (app.ts) and tests:
- * modules never import each other (ADR 0001). Lending reaches catalog through
+ * modules never import each other. Lending reaches catalog through
  * the `BookCatalog` port, adapted in app.ts.
  */
 export type { BookAvailability, BookCatalog } from "./application/ports/bookCatalog.js";

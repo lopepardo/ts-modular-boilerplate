@@ -7,7 +7,7 @@ enum LoanStatus {
 
 model Loan {
   id         String     @id
-  /// Id of a catalog Book. Deliberately not a relation: modules share ids, not foreign keys (ADR 0003).
+  /// Id of a catalog Book. Deliberately not a relation: modules share ids, not foreign keys.
   bookId     String
   /// Opaque external id; the library does not register Members.
   memberId   String
