@@ -57,6 +57,7 @@ pnpm db:migrate
 - `pnpm db:generate` — after cloning and after every change to `prisma/schema/*.prisma`
 - `pnpm db:migrate` — `prisma migrate dev`
 - `pnpm build` / `pnpm start` — compile to `dist/` and run
+- `docker compose --profile app up --build -d` — run the production image locally (api + Postgres) to smoke-test it; the plain `docker compose up -d postgres` does not start the api. The image only reads environment variables, so the same image runs anywhere; migrations are manual and never run at build or start
 
 ### Start a project from this template
 
