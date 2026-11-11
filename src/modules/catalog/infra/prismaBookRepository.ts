@@ -1,5 +1,5 @@
 import { NotFoundError } from "../../../shared/errors.js";
-import type { PrismaClient } from "../../../platform/db/generated/client.js";
+import { Prisma, type PrismaClient } from "../../../platform/db/generated/client.js";
 import type { BookRepository } from "../application/ports/bookRepository.js";
 import type { Book } from "../domain/book.js";
 
@@ -15,12 +15,7 @@ export const createPrismaBookRepository = (prisma: PrismaClient): BookRepository
         return await prisma.book.update({ where: { id: book.id }, data: book });
       } catch (error) {
         // P2025: the record to update does not exist (e.g. removed after `findById`).
-        if (
-          typeof error === "object" &&
-          error !== null &&
-          "code" in error &&
-          error.code === "P2025"
-        ) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
           throw new NotFoundError("BOOK_NOT_FOUND", `Book ${book.id} not found`, {
             cause: error,
           });

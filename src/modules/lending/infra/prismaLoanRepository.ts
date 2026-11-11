@@ -1,5 +1,5 @@
 import { ConflictError } from "../../../shared/errors.js";
-import type { PrismaClient } from "../../../platform/db/generated/client.js";
+import { Prisma, type PrismaClient } from "../../../platform/db/generated/client.js";
 import type { LoanRepository } from "../application/ports/loanRepository.js";
 import { dueDateAt } from "../domain/dueDate.js";
 import type { Loan } from "../domain/loan.js";
@@ -33,12 +33,7 @@ export const createPrismaLoanRepository = (prisma: PrismaClient): LoanRepository
         return toLoan(row);
       } catch (error) {
         // Partial unique index `Loan_one_active_per_book`: another request got the Book first.
-        if (
-          typeof error === "object" &&
-          error !== null &&
-          "code" in error &&
-          error.code === "P2002"
-        ) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
           throw new ConflictError("BOOK_ALREADY_LOANED", "Book already has an active loan", {
             cause: error,
           });
