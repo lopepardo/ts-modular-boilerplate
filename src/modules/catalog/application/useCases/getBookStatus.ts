@@ -5,9 +5,11 @@ export type BookStatus = { exists: false } | { exists: true; retired: boolean };
 
 export type GetBookStatus = (id: string) => Promise<BookStatus>;
 
-export const getBookStatusUseCase =
-  ({ repository }: Pick<CatalogDeps, "repository">): GetBookStatus =>
-  async (id) => {
+export const getBookStatusUseCase = ({
+  repository,
+}: Pick<CatalogDeps, "repository">): GetBookStatus => {
+  return async (id) => {
     const book = await repository.findById(id);
     return book ? { exists: true, retired: book.retired } : { exists: false };
   };
+};
