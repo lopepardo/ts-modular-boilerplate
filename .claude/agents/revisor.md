@@ -16,6 +16,7 @@ Report only:
    - money as floats instead of integer cents;
    - `try/catch` in routes, or business errors not thrown as `BusinessError` subclasses (`src/shared/errors.ts`);
    - Prisma, Fastify or Zod leaking into `application`/`domain`, or a module importing another module's internals instead of its `index.ts`;
+   - a class, a `Date` or a hand-written branded entity (instead of its `borrow`/`rehydrate` functions) in `domain/`;
    - a module reading or writing another module's tables;
    - an API change (routes, fields, status or error codes) without a matching update to `docs/api.md`;
    - an edited migration that was already applied;

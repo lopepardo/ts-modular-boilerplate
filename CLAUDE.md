@@ -2,7 +2,7 @@
 
 Boilerplate for an HTTP API organized as a feature-first modular monolith (the reasoning behind the architecture decisions is in `README.md`). The example domain is a library: `catalog` is implemented; `lending` is implemented too (borrow, return, rules, view/list). Domain, code, docs and error messages are in **English**.
 
-**Stack:** Node + TypeScript ESM (`nodenext`, `strict`), Fastify 5, Prisma 7 (`prisma-client` + `@prisma/adapter-pg`) on PostgreSQL 18, Zod 4, Vitest, ESLint (typescript-eslint type-checked) + Prettier, pnpm.
+**Stack:** Node 26 + TypeScript ESM (`nodenext`, `strict`), Fastify 5, Prisma 7 (`prisma-client` + `@prisma/adapter-pg`) on PostgreSQL 18, Zod 4, Vitest, ESLint (typescript-eslint type-checked) + Prettier, pnpm.
 
 **Folder map:**
 
@@ -12,11 +12,11 @@ src/
   app.ts             buildApp(deps): the only composition root
   modules/<name>/    http/ application/ domain/ infra/ + index.ts (public entry point)
     catalog/         books (simple module: use cases + repository)
-    lending/         loans (rich domain: Loan entity, DueDate value object; reaches catalog via a port wired in app.ts)
+    lending/         loans (rich domain: Loan entity as branded data + functions; reaches catalog via a port wired in app.ts)
   platform/          config/env.ts, db/client.ts (+ generated/), http/ (createServer, errorHandler, errorMapper), logging/
   shared/            BusinessError and subclasses, Clock, IdGenerator
 prisma/schema/       one .prisma file per module (+ base.prisma); migrations/
-tests/               *.test.ts (Vitest, real Postgres); support/ = testApp, fakeClock, testConfig
+tests/               *.test.ts (Vitest, real Postgres); domain/ = DB-free domain tests; support/ = testApp, fakeClock, testConfig
 docs/api.md          endpoint contract
 README.md            overview and architecture decisions (in Spanish)
 docs/api/            request collection (OpenCollection/Bruno) for manual testing
@@ -28,7 +28,8 @@ docker-compose.yml   local Postgres
 ## Why does each part exist?
 
 - **Modules with layers:** `http` (Fastify routes + Zod schemas + presenters), `application` (use cases and repository interfaces), `domain` (entities and rules, once a module needs them), `infra` (Prisma repositories). Each module exposes only its `index.ts`.
-- **Boundaries are enforced by ESLint** (`eslint.config.*`, tested in `tests/architecture-rules.test.ts`): modules never import each other (cross-module needs go through a port in the consumer, adapted in `app.ts`); `application`/`domain` cannot import `http`, `infra`, `platform`, or `fastify`/`zod`/Prisma/`pg`; `domain` cannot import `application`. Each module is the only reader/writer of its tables, which live in its own Postgres schema with no foreign keys or relations to other modules' tables: other modules' ids are plain columns; ESLint (heuristic: aliases, destructuring and raw SQL are not caught) rejects `prisma.<model>` (also `tx.`/`this.prisma.`) outside the owning module's `infra/`, where the owner is the module whose `prisma/schema/<module>.prisma` declares the model (tests are exempt so they can delete the rows they create).
+- **Boundaries are enforced by ESLint** (`eslint.config.*`, tested in `tests/architecture-rules.test.ts`): modules never import each other (cross-module needs go through a port in the consumer, adapted in `app.ts`); `application`/`domain` cannot import `http`, `infra`, `platform`, or `fastify`/`zod`/Prisma/`pg`; `domain` cannot import `application`. Each module is the only reader/writer of its tables, which live in its own Postgres schema with no foreign keys or relations to other modules' tables: other modules' ids are plain columns; ESLint (heuristic: aliases, destructuring and raw SQL are not caught) rejects `prisma.<model>` (also `tx.`/`this.prisma.`) outside the owning module's `infra/`, where the owner is the module whose `prisma/schema/<module>.prisma` declares the model (tests are exempt so they can delete the rows they create). Tests may also import a module's `domain/` (`tests/domain/`).
+- **Domain style:** immutable data and functions, no classes. An entity with rules is a branded `Readonly` type created only by `borrow` (rules) or `rehydrateLoan` (`infra` only); instants are `Temporal.Instant`; data without rules is a plain `type` (`Book`). Details in `.claude/rules/application.md`.
 - **Use cases are factory functions** (`registerBookUseCase(deps)` in `application/useCases/`) that receive their dependencies. `buildApp(deps)` is the single place that creates concrete ones. Tests run the real app on the local Postgres and only inject `generateId` and `clock` (`tests/support/testApp.ts`). No in-memory repositories and no `vi.mock` of the DB client.
 - **`BusinessError` + `errorHandler`:** business errors carry only `code` and `message`; `platform/http/errorMapper.ts` maps them to HTTP and keeps the format `{ error: { code, message, traceId } }`. Schema validation errors → 400 `VALIDATION_ERROR` (with `details`), `UnauthorizedError` → 401, `ForbiddenError` → 403, `NotFoundError` → 404, `ConflictError` → 409, other `BusinessError` → 422, anything else → 500. Handlers do not catch errors.
 - **`buildApp()` separate from `main.ts`:** allows tests with `app.inject` without opening a port.

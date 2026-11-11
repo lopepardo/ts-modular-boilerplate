@@ -36,7 +36,7 @@ src/
   platform/               infraestructura común: configuración, base de datos, servidor HTTP, logging
   shared/                 piezas mínimas comunes: errores de negocio, reloj, generador de ids
 prisma/schema/            un archivo .prisma por módulo (+ base.prisma)
-tests/                    Vitest contra Postgres real
+tests/                    Vitest contra Postgres real (tests/domain/: reglas del dominio, sin base)
 docs/api.md               contrato de los endpoints (y docs/api/: colección de requests para probar a mano)
 CLAUDE.md                 instrucciones para el asistente de IA
 ```
@@ -51,9 +51,10 @@ El código se organiza por módulo, no por tipo de archivo (`routes/`, `services
 - **Los módulos nunca se importan entre sí, ni siquiera por el `index.ts`.** Si `lending` necesita algo de `catalog`, declara un puerto con tipos propios y `app.ts` lo conecta con la API pública de `catalog`. Así la dirección de la dependencia se ve en un solo lugar, no pueden existir ciclos y, para probar `lending`, basta con sustituir el puerto.
 - **`application` y `domain` no conocen el framework ni la base de datos:** no importan `http`, `infra`, `platform`, `fastify`, `zod`, Prisma ni `pg`. Es lo justo de "hexagonal" que hace falta, sin la ceremonia completa.
 - **ESLint lo hace cumplir y las propias reglas tienen tests** (`tests/architecture-rules.test.ts`). Una regla que solo vive en un documento termina rompiéndose.
+- **En `domain/`, datos inmutables y funciones; nunca clases.** `Loan` es un tipo `Readonly` con un _brand_ que no se exporta: solo nace de `borrow` (aplica las reglas) o de `rehydrateLoan` (reconstruye lo guardado y solo lo usa `infra`). Los instantes son `Temporal.Instant`, que es inmutable. Un dato sin reglas es un `type` (`Book`) y los estados con campos distintos se modelan con uniones discriminadas. Los datos planos cruzan sin mapeo las fronteras (Prisma, JSON, eventos) y los casos de uso, repositorios y rutas ya eran funciones: un solo estilo en todo el proyecto.
 - **Un módulo empieza simple** (casos de uso + repositorio) y gana `domain/` solo cuando aparece una regla de negocio real.
 
-Descartado: capas horizontales globales (mezclan los módulos y no dejan ninguna frontera) y hexagonal puro en todo el proyecto (demasiada ceremonia para validar una idea).
+Descartado: capas horizontales globales (mezclan los módulos y no dejan ninguna frontera) hexagonal puro en todo el proyecto (demasiada ceremonia para validar una idea) y entidades como clases (exigen un mapper en cada frontera, porque Prisma devuelve objetos planos, y mezclan dos estilos en el proyecto).
 
 ### 2. Inyección de dependencias con funciones, sin contenedor
 
@@ -96,6 +97,7 @@ Los tests levantan la aplicación real sobre el Postgres local. No hay repositor
 - **Se gana** que lo que corre en los tests es lo que corre en producción, incluidas las migraciones y las restricciones de la base (por ejemplo, un índice único parcial se prueba de verdad con peticiones concurrentes), y no hay dos implementaciones de cada repositorio que puedan divergir sin que nadie lo note.
 - **Se paga** con tener Postgres levantado para correr `pnpm test`, y con que los archivos de test corran uno a la vez porque comparten la base.
 - Cada test borra solo las filas que creó (`createTestApp()` en `tests/support/testApp.ts`), así que tus datos locales no se tocan.
+- **La excepción es `domain/`:** es código puro, así que `tests/domain/` prueba sus reglas sin base de datos ni app.
 
 ## Cómo usarla
 
