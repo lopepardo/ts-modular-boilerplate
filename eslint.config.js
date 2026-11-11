@@ -166,16 +166,12 @@ const outsideModulesBoundary = {
   rules: restrict(modules.map(internalsOf)),
 };
 
-/**
- * Tests also see each module's `domain/`: it is pure code (no I/O), so it can be
- * unit-tested directly. Application, http and infra internals stay off limits.
- */
+/** Tests may also import a module's `domain/`: pure code, unit-tested without the database. */
 const testsBoundary = {
   files: ["tests/**/*.ts"],
   rules: restrict(
     modules.map((name) => ({
-      // The directory itself is re-included too: gitignore-style patterns cannot
-      // re-include a file whose parent directory is excluded.
+      // `domain` itself too: gitignore patterns cannot re-include files of an excluded dir.
       group: [
         `**/${name}/**`,
         `!**/${name}/index.js`,
