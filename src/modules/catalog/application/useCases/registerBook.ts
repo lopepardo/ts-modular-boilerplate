@@ -14,6 +14,6 @@ export const registerBookUseCase = ({
 }: Pick<CatalogDeps, "repository" | "generateId">): RegisterBook => {
   return (input) => {
     const id = generateId();
-    return repository.save({ id, ...input, retired: false });
+    return repository.add({ id, ...input, retired: false });
   };
 };

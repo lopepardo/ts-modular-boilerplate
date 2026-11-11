@@ -15,5 +15,5 @@ export const retireBookUseCase =
     if (book.retired) {
       return book;
     }
-    return repository.save({ ...book, retired: true });
+    return repository.update({ ...book, retired: true });
   };

@@ -1,3 +1,4 @@
+import { NotFoundError } from "../../../shared/errors.js";
 import type { PrismaClient } from "../../../platform/db/generated/client.js";
 import type { BookRepository } from "../application/ports/bookRepository.js";
 import type { Book } from "../domain/book.js";
@@ -5,12 +6,27 @@ import type { Book } from "../domain/book.js";
 /** Only touches the `Book` table owned by this module. */
 export const createPrismaBookRepository = (prisma: PrismaClient): BookRepository => {
   return {
-    save: (book: Book) => {
-      return prisma.book.upsert({
-        where: { id: book.id },
-        create: book,
-        update: book,
-      });
+    add: (book: Book) => {
+      return prisma.book.create({ data: book });
+    },
+
+    update: async (book: Book) => {
+      try {
+        return await prisma.book.update({ where: { id: book.id }, data: book });
+      } catch (error) {
+        // P2025: the record to update does not exist (e.g. removed after `findById`).
+        if (
+          typeof error === "object" &&
+          error !== null &&
+          "code" in error &&
+          error.code === "P2025"
+        ) {
+          throw new NotFoundError("BOOK_NOT_FOUND", `Book ${book.id} not found`, {
+            cause: error,
+          });
+        }
+        throw error;
+      }
     },
 
     findById: (id) => {
