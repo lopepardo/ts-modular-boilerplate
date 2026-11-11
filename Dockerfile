@@ -1,4 +1,4 @@
-FROM node:24-alpine AS base
+FROM node:26-alpine AS base
 
 WORKDIR /app
 RUN corepack enable
@@ -9,7 +9,7 @@ RUN pnpm build
 RUN pnpm prune --prod
 
 
-FROM node:24-alpine AS production
+FROM node:26-alpine AS production
 
 WORKDIR /app
 ENV NODE_ENV=production

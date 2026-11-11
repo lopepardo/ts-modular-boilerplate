@@ -4,7 +4,7 @@ Plantilla para empezar una API HTTP como un **monolito modular**: un solo proces
 
 El dominio de ejemplo (una biblioteca con `catalog` y `lending`) solo sirve para mostrar un módulo simple y uno con reglas de negocio. Se reemplaza al empezar tu proyecto.
 
-Pila: Node.js 24 + TypeScript (ESM), Fastify 5, Prisma 7 sobre PostgreSQL 18, Zod 4, Vitest, ESLint + Prettier y pnpm.
+Pila: Node.js 26 + TypeScript (ESM), Fastify 5, Prisma 7 sobre PostgreSQL 18, Zod 4, Vitest, ESLint + Prettier y pnpm.
 
 ## Cómo funciona
 
@@ -99,7 +99,7 @@ Los tests levantan la aplicación real sobre el Postgres local. No hay repositor
 
 ## Cómo usarla
 
-Necesitas Node.js 24, pnpm 12.15.0 (fijado en `package.json`) y Docker.
+Necesitas Node.js 26, pnpm 12.15.0 (fijado en `package.json`) y Docker.
 
 ### Ejecutar localmente
 
