@@ -8,7 +8,7 @@ type App = Awaited<ReturnType<typeof createTestApp>>["app"];
 type ErrorBody = { error: Record<string, unknown> };
 
 /** The moment the clock shows while the tests run. */
-const FIXED_NOW = new Date("2026-03-01T10:00:00.000Z");
+const FIXED_NOW = Temporal.Instant.from("2026-03-01T10:00:00.000Z");
 
 /**
  * Each describe gets its own app on the real Postgres and deletes only the rows it created.
@@ -295,9 +295,9 @@ describe("lending: borrowing rules", () => {
     const overdue = (await borrowNew("member-late")).json<{ id: string }>().id;
 
     // Exactly on the DueDate the Loan is not overdue yet; one millisecond later it is.
-    clock.set(new Date("2026-03-15T10:00:00.000Z"));
+    clock.set(Temporal.Instant.from("2026-03-15T10:00:00.000Z"));
     expect((await borrowNew("member-late")).statusCode).toBe(201);
-    clock.set(new Date("2026-03-15T10:00:00.001Z"));
+    clock.set(Temporal.Instant.from("2026-03-15T10:00:00.001Z"));
     const blocked = await borrowNew("member-late");
     expect(blocked.statusCode).toBe(409);
     expect(errorCode(blocked)).toBe("MEMBER_HAS_OVERDUE_LOANS");
@@ -310,7 +310,7 @@ describe("lending: borrowing rules", () => {
   it("lets a Member with only returned or non-overdue Loans borrow", async () => {
     const returned = (await borrowNew("member-ok")).json<{ id: string }>().id;
     await giveBack(returned);
-    clock.set(new Date("2026-06-01T10:00:00.000Z"));
+    clock.set(Temporal.Instant.from("2026-06-01T10:00:00.000Z"));
 
     expect((await borrowNew("member-ok")).statusCode).toBe(201);
     expect((await borrowNew("member-ok")).statusCode).toBe(201);
@@ -324,8 +324,8 @@ it("the database allows only one active Loan per Book", async () => {
     bookId: "book-unique-index",
     memberId: "member-index",
     status,
-    borrowedAt: FIXED_NOW,
-    dueDate: FIXED_NOW,
+    borrowedAt: new Date(FIXED_NOW.epochMilliseconds),
+    dueDate: new Date(FIXED_NOW.epochMilliseconds),
   });
   const ids = [randomUUID(), randomUUID(), randomUUID()] as const;
   try {
@@ -404,10 +404,10 @@ describe("lending: view and list loans", () => {
   it("flips an active Loan to overdue when the clock passes its due date, without any write", async () => {
     const loan = await borrowFor("overdue-member");
 
-    clock.set(new Date("2026-03-15T10:00:00.000Z"));
+    clock.set(Temporal.Instant.from("2026-03-15T10:00:00.000Z"));
     expect((await view(loan.id)).json<LoanBody>().overdue).toBe(false);
 
-    clock.set(new Date("2026-03-15T10:00:00.001Z"));
+    clock.set(Temporal.Instant.from("2026-03-15T10:00:00.001Z"));
     const res = await view(loan.id);
     expect(res.json<LoanBody>()).toMatchObject({ status: "active", overdue: true });
   });
@@ -415,7 +415,7 @@ describe("lending: view and list loans", () => {
   it("never reports a returned Loan as overdue", async () => {
     const loan = await borrowFor("returned-member");
     await app.inject({ method: "POST", url: `/loans/${loan.id}/return` });
-    clock.set(new Date("2027-01-01T00:00:00.000Z"));
+    clock.set(Temporal.Instant.from("2027-01-01T00:00:00.000Z"));
 
     const res = await view(loan.id);
 
@@ -444,7 +444,7 @@ describe("lending: view and list loans", () => {
 
   it("computes overdue in listings from the clock", async () => {
     const loan = await borrowFor("list-overdue");
-    clock.set(new Date("2026-04-01T00:00:00.000Z"));
+    clock.set(Temporal.Instant.from("2026-04-01T00:00:00.000Z"));
 
     const res = await list("memberId=list-overdue");
 

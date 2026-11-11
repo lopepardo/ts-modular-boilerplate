@@ -9,11 +9,15 @@ export type LoanFilter = {
 export type LoanRepository = {
   findById: (id: string) => Promise<Loan | null>;
   /**
-   * Atomically, per Member: loads the Member's `active` Loans, lets `decide` (the domain
-   * rules) build the new Loan from them, and stores it. Concurrent calls for the same
-   * Member are serialized. Throws `BOOK_ALREADY_LOANED` if the Book already has an active Loan.
+   * Atomically, per Member: loads the Member's `active` Loans, builds the new Loan with `create`
+   * (the domain rules) and stores it; calls for the same Member are serialized. Throws
+   * `BOOK_ALREADY_LOANED` if the Book already has an active Loan.
+   *
+   * - `create` must return a Loan of `memberId`: only that Member is locked.
+   * - The only way to create a Loan: the per-Member rules hold only if every writer goes through
+   *   here (one active Loan per Book is enforced by a unique index instead).
    */
-  openLoan: (memberId: string, decide: (memberActiveLoans: Loan[]) => Loan) => Promise<Loan>;
+  openLoan: (memberId: string, create: (memberActiveLoans: Loan[]) => Loan) => Promise<Loan>;
   search: (filter: LoanFilter) => Promise<Loan[]>;
   /**
    * Stores a Loan the domain just gave back (`giveBack`), only if it is still `active` in the

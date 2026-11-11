@@ -1,32 +1,45 @@
 import { ConflictError } from "../../../shared/errors.js";
 import { Prisma, type PrismaClient } from "../../../platform/db/generated/client.js";
 import type { LoanRepository } from "../application/ports/loanRepository.js";
-import { dueDateAt } from "../domain/dueDate.js";
-import type { Loan } from "../domain/loan.js";
+import { rehydrateLoan, type Loan, type LoanStatus } from "../domain/loan.js";
+
+type LoanRow = {
+  id: string;
+  bookId: string;
+  memberId: string;
+  status: LoanStatus;
+  borrowedAt: Date;
+  dueDate: Date;
+};
 
 /** Only touches the `Loan` table owned by this module. */
 export const createPrismaLoanRepository = (prisma: PrismaClient): LoanRepository => {
-  const toLoan = (row: Omit<Loan, "dueDate"> & { dueDate: Date }): Loan => ({
-    ...row,
-    dueDate: dueDateAt(row.dueDate),
-  });
+  const toLoan = (row: LoanRow): Loan => {
+    return rehydrateLoan({
+      ...row,
+      borrowedAt: row.borrowedAt.toTemporalInstant(),
+      dueDate: row.dueDate.toTemporalInstant(),
+    });
+  };
+  const toDate = (instant: Temporal.Instant) => new Date(instant.epochMilliseconds);
 
   return {
-    openLoan: async (memberId, decide) => {
+    openLoan: async (memberId, create) => {
       try {
         const row = await prisma.$transaction(async (tx) => {
-          // Serializes this Member's borrowings; the lock is released when the transaction ends.
+          // Serializes this Member's borrowings until the transaction ends. Relies on READ
+          // COMMITTED (the default) so the read below sees the previous holder's commit.
           await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${memberId}))`;
           const active = await tx.loan.findMany({ where: { memberId, status: "active" } });
-          const loan = decide(active.map(toLoan));
+          const loan = create(active.map(toLoan));
           return tx.loan.create({
             data: {
               id: loan.id,
               bookId: loan.bookId,
               memberId: loan.memberId,
               status: loan.status,
-              borrowedAt: loan.borrowedAt,
-              dueDate: loan.dueDate.value,
+              borrowedAt: toDate(loan.borrowedAt),
+              dueDate: toDate(loan.dueDate),
             },
           });
         });

@@ -1,31 +1,38 @@
 import { ConflictError } from "../../../shared/errors.js";
-import { dueDateFrom, type DueDate } from "./dueDate.js";
 
 export type LoanStatus = "active" | "returned";
 
-/** The lending of a Book to a Member. */
-export type Loan = {
+/** The stored shape of a Loan: what `rehydrateLoan` takes. */
+export type LoanProps = Readonly<{
   id: string;
   bookId: string;
   memberId: string;
   status: LoanStatus;
-  borrowedAt: Date;
-  dueDate: DueDate;
-};
+  borrowedAt: Temporal.Instant;
+  dueDate: Temporal.Instant;
+}>;
+
+declare const checked: unique symbol; // not exported: only this file can brand a Loan
+
+/** The lending of a Book to a Member. Only `borrow` and `rehydrateLoan` create one. */
+export type Loan = LoanProps & { readonly [checked]: true };
+
+/** A Loan is due this many days after it starts. */
+export const LOAN_PERIOD_DAYS = 14;
 
 /** A Member can hold at most this many `active` Loans at once. */
 export const MAX_ACTIVE_LOANS = 3;
 
 /** Overdue: an `active` Loan whose DueDate has passed. Derived, never stored. */
-export const isOverdue = (loan: Loan, now: Date): boolean =>
-  loan.status === "active" && now.getTime() > loan.dueDate.value.getTime();
+export const isOverdue = (loan: Loan, now: Temporal.Instant): boolean =>
+  loan.status === "active" && Temporal.Instant.compare(now, loan.dueDate) > 0;
 
 /**
- * Starts a Loan: always `active`, due 14 days after `now`. `memberActiveLoans` are the
- * Member's current `active` Loans; the Member must have none Overdue and fewer than the limit.
+ * Starts an `active` Loan due `LOAN_PERIOD_DAYS` after `now`. Refuses a Member whose
+ * `memberActiveLoans` include an Overdue one or reach `MAX_ACTIVE_LOANS`.
  */
 export const borrow = (
-  input: { id: string; bookId: string; memberId: string; now: Date },
+  input: { id: string; bookId: string; memberId: string; now: Temporal.Instant },
   memberActiveLoans: readonly Loan[],
 ): Loan => {
   if (memberActiveLoans.some((loan) => isOverdue(loan, input.now))) {
@@ -46,11 +53,14 @@ export const borrow = (
     memberId: input.memberId,
     status: "active",
     borrowedAt: input.now,
-    dueDate: dueDateFrom(input.now),
-  };
+    dueDate: input.now.add({ hours: LOAN_PERIOD_DAYS * 24 }),
+  } as Loan;
 };
 
-/** Gives a Loan back: only an `active` Loan can be returned, and there is no way back. */
+/** Rebuilds a stored Loan without re-applying the rules. For `infra` only. */
+export const rehydrateLoan = (props: LoanProps): Loan => props as Loan;
+
+/** Only an `active` Loan can be returned; `returned` is final. */
 export const giveBack = (loan: Loan): Loan => {
   if (loan.status === "returned") {
     throw new ConflictError("LOAN_ALREADY_RETURNED", `Loan ${loan.id} is already returned`);
