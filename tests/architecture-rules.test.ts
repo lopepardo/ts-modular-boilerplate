@@ -9,7 +9,7 @@ const eslint = new ESLint({
   overrideConfig: [
     {
       ...tseslint.configs.disableTypeChecked,
-      files: ["src/**/*.ts"],
+      files: ["src/**/*.ts", "tests/**/*.ts"],
       languageOptions: { parserOptions: { project: false } },
     },
   ],
@@ -75,11 +75,25 @@ describe.skipIf(modules.length === 0)("module boundary rules", () => {
       expect(await violations(http, code)).not.toHaveLength(0);
     });
 
+    it("lets tests import a module's index and domain, but not its other internals", async () => {
+      const test = `tests/x.test.ts`;
+      const index = `import { x } from "../src/modules/${other}/index.js";`;
+      const domainCode = `import { x } from "../src/modules/${other}/domain/x.js";`;
+      expect(await violations(test, index)).toHaveLength(0);
+      expect(await violations(test, domainCode)).toHaveLength(0);
+      for (const layer of ["application", "http", "infra"]) {
+        const code = `import { x } from "../src/modules/${other}/${layer}/x.js";`;
+        expect(await violations(test, code)).not.toHaveLength(0);
+      }
+    });
+
     it("still lets the composition root import a module's index only", async () => {
       const index = `import { x } from "./modules/${other}/index.js";`;
       const internals = `import { x } from "./modules/${other}/infra/x.js";`;
       expect(await violations("src/app.ts", index)).toHaveLength(0);
+      const domainCode = `import { x } from "./modules/${other}/domain/x.js";`;
       expect(await violations("src/app.ts", internals)).not.toHaveLength(0);
+      expect(await violations("src/app.ts", domainCode)).not.toHaveLength(0);
     });
   });
 });

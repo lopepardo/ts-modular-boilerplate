@@ -158,12 +158,33 @@ const moduleBoundaries = modules.flatMap((name) => {
 });
 
 /**
- * Code outside the modules (composition root, entry point, tests) may only
- * see each module's public entry point.
+ * Code outside the modules (composition root, entry point) may only see each
+ * module's public entry point.
  */
 const outsideModulesBoundary = {
-  files: ["src/app.ts", "src/main.ts", "tests/**/*.ts"],
+  files: ["src/app.ts", "src/main.ts"],
   rules: restrict(modules.map(internalsOf)),
+};
+
+/**
+ * Tests also see each module's `domain/`: it is pure code (no I/O), so it can be
+ * unit-tested directly. Application, http and infra internals stay off limits.
+ */
+const testsBoundary = {
+  files: ["tests/**/*.ts"],
+  rules: restrict(
+    modules.map((name) => ({
+      // The directory itself is re-included too: gitignore-style patterns cannot
+      // re-include a file whose parent directory is excluded.
+      group: [
+        `**/${name}/**`,
+        `!**/${name}/index.js`,
+        `!**/${name}/domain`,
+        `!**/${name}/domain/**`,
+      ],
+      message: `Tests import ${name} only through its public entry point (index.ts) or its domain/.`,
+    })),
+  ),
 };
 
 /** platform/ and shared/ must not know about modules at all. */
@@ -281,6 +302,7 @@ export default [
   ...typescriptPresets,
   typescriptProject,
   outsideModulesBoundary,
+  testsBoundary,
   infrastructureBoundary,
   ...moduleBoundaries,
   ...tableOwnership,
