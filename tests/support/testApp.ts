@@ -13,10 +13,8 @@ type TestAppOptions = {
 };
 
 /**
- * The app wired for tests: real Prisma repositories on the local Postgres
- * (`docker compose up -d postgres` + `pnpm db:migrate`). Only rows created by
- * this run are deleted, so a developer's own data in the same database is
- * never touched.
+ * The app with the real Prisma repositories on the local Postgres. `cleanup` deletes only the rows
+ * this run created (through `purge`), so a developer's own data is never touched.
  */
 export const createTestApp = async ({ clock, purge }: TestAppOptions = {}) => {
   const prisma = createPrismaClient(loadEnv());

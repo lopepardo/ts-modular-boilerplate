@@ -19,9 +19,8 @@ export const createServer = async (config: ServerConfig) => {
   app.setValidatorCompiler(validatorCompiler);
   app.setSerializerCompiler(serializerCompiler);
 
-  // TODO: OpenAPI docs: register @fastify/swagger with
-  // `transform: jsonSchemaTransform` (fastify-type-provider-zod) before routes,
-  // and declare error `response` schemas (4xx/5xx) on each route.
+  // TODO(OpenAPI): @fastify/swagger with `jsonSchemaTransform` before the routes, plus 4xx/5xx
+  // `response` schemas on each route.
 
   app.setErrorHandler(errorHandler);
   app.setNotFoundHandler(notFoundHandler);

@@ -9,21 +9,18 @@ import { registerBookUseCase } from "./application/useCases/registerBook.js";
 import { bookRoutes } from "./http/routes.js";
 
 /*
- * Public surface, consumed only by the composition root (app.ts) and tests:
- * modules never import each other. Entities from `domain` are not
- * exported; callers get them through the use cases' return types.
+ * Public surface, used only by app.ts and tests (modules never import each other).
+ * Expose only what a consumer uses today; `domain` types travel in the use cases' return types.
  */
 export type { BookStatus } from "./application/useCases/getBookStatus.js";
 export { createPrismaBookRepository } from "./infra/prismaBookRepository.js";
 
-/** Expose only what a consumer uses today: add a use case here when another module needs it. */
 export type CatalogModule = {
   routes: FastifyPluginAsync;
-  /** Whether a Book exists and is Retired; the only thing other modules need to know. */
+  /** Whether a Book exists and is Retired: all other modules need to know. */
   getBookStatus: GetBookStatus;
 };
 
-/** Public entry point of the catalog module. */
 export const createCatalogModule = (deps: CatalogDeps): CatalogModule => {
   return {
     routes: bookRoutes({

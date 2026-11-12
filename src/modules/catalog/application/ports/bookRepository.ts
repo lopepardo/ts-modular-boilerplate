@@ -11,9 +11,7 @@ export type BookFilter = {
   retired?: boolean;
 };
 
-/** Declared by the application layer, implemented in `infra`. */
 export type BookRepository = {
-  /** Inserts a new Book. */
   add: (book: Book) => Promise<Book>;
   /** Replaces an existing Book. Throws `NotFoundError("BOOK_NOT_FOUND")` if it no longer exists. */
   update: (book: Book) => Promise<Book>;

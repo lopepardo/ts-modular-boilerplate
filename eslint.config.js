@@ -1,23 +1,9 @@
-/**
- * ESLint flat config.
- *
- * Layout of this file (top to bottom):
- *   1. Discovery      – which modules exist under src/modules
- *   2. Import rules   – reusable "forbidden import" patterns
- *   3. Rule builders  – turn patterns into per-module / per-layer configs
- *   4. Table ownership – only a module's infra touches its Prisma models
- *   5. Base config    – ignores, recommended presets, TypeScript style rules
- *   6. Export         – everything assembled in order
- *
- * Order matters in flat configs: later entries override earlier ones.
- */
+// ESLint flat config. Order matters: later entries override earlier ones.
 import js from "@eslint/js";
 import { readdirSync, readFileSync } from "node:fs";
 import tseslint from "typescript-eslint";
 
-// ---------------------------------------------------------------------------
-// 1. Discovery
-// ---------------------------------------------------------------------------
+// --- 1. Discovery -----------------------------------------------------------
 
 const modulesDir = `${import.meta.dirname}/src/modules`;
 
@@ -29,70 +15,51 @@ const modules = readdirSync(modulesDir, { withFileTypes: true })
 /** Files that get the TypeScript-aware rules. */
 const tsFiles = ["src/**/*.ts", "tests/**/*.ts"];
 
-// ---------------------------------------------------------------------------
-// 2. Import rules
-//    Each constant is one `no-restricted-imports` pattern.
-// ---------------------------------------------------------------------------
+// --- 2. Import rules: one `no-restricted-imports` pattern each -------------
 
-/**
- * Cross-module boundary: from outside module `name`, only its public entry
- * point (`index.js`) may be imported, never its internals.
- */
+/** Outside the modules (app.ts, main.ts), only a module's `index.js` may be imported. */
 const internalsOf = (name) => ({
   group: [`**/${name}/**`, `!**/${name}/index.js`],
   message: `Import ${name} only through its public entry point (index.ts).`,
 });
 
-/**
- * Modules never import each other, not even through `index.ts`. A module that
- * needs another declares its own port in `application/ports`, and `app.ts`
- * (the composition root) adapts the other module's public API to it.
- */
+/** Modules never import each other, not even `index.ts`: declare a port, adapt it in app.ts. */
 const anotherModule = (name) => ({
   group: [`**/${name}/**`],
   message: `Do not import module ${name}. Declare a port and wire it in app.ts.`,
 });
 
-/** `application` and `domain` must not depend on the Fastify/Prisma adapters. */
 const adapterLayers = {
   group: ["**/http", "**/http/**", "**/infra", "**/infra/**"],
   message: "application and domain code must not import from http or infra.",
 };
 
-/** `application` and `domain` must not depend on platform (config, db, ...). */
 const platformLayer = {
   group: ["**/platform", "**/platform/**"],
   message: "application and domain code must not import from platform.",
 };
 
-/** Modules receive configuration through their deps; only `main.ts` reads the env. */
 const configLayer = {
   group: ["**/platform/config", "**/platform/config/**"],
   message: "modules must not import platform/config; receive values through deps.",
 };
 
-/** `http` talks to use cases, never to persistence directly. */
 const infraFromHttp = {
   group: ["**/infra", "**/infra/**"],
   message: "http code must not import from infra; go through the use cases.",
 };
 
-/** Shared infrastructure sits below the modules: it cannot depend on any of them. */
 const modulesFromInfrastructure = {
   group: ["**/modules", "**/modules/**"],
   message: "platform and shared must not import modules; the composition root wires them.",
 };
 
-/** `domain` is the innermost layer: it cannot see `application`. */
 const innerLayer = {
   group: ["**/application", "**/application/**"],
   message: "domain code must not import from application.",
 };
 
-/**
- * Framework and driver packages belong in `http` / `infra`.
- * Wildcards also cover subpaths and sibling packages (e.g. `fastify-plugin`).
- */
+/** Wildcards also cover subpaths and sibling packages (e.g. `fastify-plugin`). */
 const vendorPackages = {
   group: [
     "fastify",
@@ -110,33 +77,21 @@ const vendorPackages = {
     "fastify, prisma, pg and zod packages belong in http or infra, not in application/domain.",
 };
 
-// ---------------------------------------------------------------------------
-// 3. Rule builders
-// ---------------------------------------------------------------------------
+// --- 3. Rule builders -------------------------------------------------------
 
 /**
- * Wraps patterns in a `no-restricted-imports` rule.
- *
- * NOTE: when several configs match the same file, ESLint does NOT merge the
- * options of a rule; the last one wins. That is why each layer below lists
- * the cross-module patterns again instead of relying on a broader config.
+ * ESLint does not merge a rule's options across configs that match the same file (the last one
+ * wins), so each layer below repeats every pattern that applies to it.
  */
 const restrict = (patterns) => ({
   "no-restricted-imports": ["error", { patterns }],
 });
 
-/** Patterns for "every other module's internals", seen from `name`. */
-const otherModulesInternals = (name) =>
-  modules.filter((other) => other !== name).map(anotherModule);
+const otherModules = (name) => modules.filter((other) => other !== name).map(anotherModule);
 
-/**
- * Per-module boundary configs, from least to most strict:
- *   - whole module  → cannot reach into other modules' internals
- *   - application/  → + no adapters, no platform, no vendor packages
- *   - domain/       → + cannot see application/
- */
+/** Per module, from least to most strict: whole module, http/, application/, domain/. */
 const moduleBoundaries = modules.flatMap((name) => {
-  const others = otherModulesInternals(name);
+  const others = otherModules(name);
   return [
     {
       files: [`src/modules/${name}/**/*.ts`],
@@ -157,10 +112,6 @@ const moduleBoundaries = modules.flatMap((name) => {
   ];
 });
 
-/**
- * Code outside the modules (composition root, entry point) may only see each
- * module's public entry point.
- */
 const outsideModulesBoundary = {
   files: ["src/app.ts", "src/main.ts"],
   rules: restrict(modules.map(internalsOf)),
@@ -183,19 +134,14 @@ const testsBoundary = {
   ),
 };
 
-/** platform/ and shared/ must not know about modules at all. */
 const infrastructureBoundary = {
   files: ["src/platform/**/*.ts", "src/shared/**/*.ts"],
   rules: restrict([modulesFromInfrastructure]),
 };
 
-// ---------------------------------------------------------------------------
-// 4. Table ownership
-//    prisma/schema/<module>.prisma declares the models a module owns. Only
-//    that module's `infra/` may use the matching client delegate
-//    (`prisma.book`, `tx.book`, `this.prisma.book`). Tests are exempt so
-//    tests can delete the rows they create.
-// ---------------------------------------------------------------------------
+// --- 4. Table ownership -----------------------------------------------------
+// Only the infra/ of the module whose prisma/schema/<module>.prisma declares a model may use its
+// delegate (`prisma.book`, `tx.book`, `this.prisma.book`). Tests are exempt to delete their rows.
 
 const schemaDir = `${import.meta.dirname}/prisma/schema`;
 
@@ -244,21 +190,13 @@ const tableOwnership = [
   })),
 ];
 
-// ---------------------------------------------------------------------------
-// 5. Base config
-// ---------------------------------------------------------------------------
+// --- 5. Base config ---------------------------------------------------------
 
-/** Files and folders ESLint never looks at. */
 const ignores = {
   ignores: ["dist/**", "node_modules/**", "coverage/**", "**/*.d.ts"],
 };
 
-/**
- * typescript-eslint presets:
- *   - `recommended` applies everywhere.
- *   - `recommendedTypeChecked` needs type information, so it is limited to
- *     the files covered by tsconfig.eslint.json.
- */
+/** `recommendedTypeChecked` needs type information: only the files in tsconfig.eslint.json. */
 const typescriptPresets = [
   ...tseslint.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked.map((config) => ({
@@ -267,7 +205,6 @@ const typescriptPresets = [
   })),
 ];
 
-/** Parser setup and project-specific style rules for TypeScript files. */
 const typescriptProject = {
   files: tsFiles,
   languageOptions: {
@@ -282,15 +219,13 @@ const typescriptProject = {
   },
   rules: {
     "@typescript-eslint/no-explicit-any": "error",
-    "@typescript-eslint/consistent-type-definitions": ["error", "type"], // `type`, not `interface`
-    "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }], // `_arg` is allowed
+    "@typescript-eslint/consistent-type-definitions": ["error", "type"],
+    "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
     "@typescript-eslint/require-await": "off", // async handlers/use cases without await are fine
   },
 };
 
-// ---------------------------------------------------------------------------
-// 6. Export (order matters: general → specific)
-// ---------------------------------------------------------------------------
+// --- 6. Export: general → specific -----------------------------------------
 
 export default [
   ignores,

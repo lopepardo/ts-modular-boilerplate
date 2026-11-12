@@ -24,13 +24,9 @@ export type ErrorResponse = {
 };
 
 /**
- * Fastify client errors we expose, with a stable code and a safe message.
- *
- * TODO: map the remaining Fastify 4xx codes (today they fall back to a generic
- * 4xx BAD_REQUEST): FST_ERR_CTP_INVALID_CONTENT_LENGTH (400), FST_ERR_BAD_URL
- * (400), FST_ERR_MAX_PARAM_LENGTH (414). Also 5xx such as
- * FST_ERR_HANDLER_TIMEOUT (503) currently collapse into a 500, and plugin
- * errors (e.g. @fastify/rate-limit 429) will need entries when added.
+ * Fastify client errors we expose, with a stable code and a safe message. Any other 4xx falls back
+ * to BAD_REQUEST and any 5xx (e.g. FST_ERR_HANDLER_TIMEOUT) to 500: add entries as needed,
+ * including plugin errors such as @fastify/rate-limit (429).
  */
 const FASTIFY_CLIENT_ERRORS: Record<string, ErrorResponse> = {
   FST_ERR_CTP_INVALID_JSON_BODY: {

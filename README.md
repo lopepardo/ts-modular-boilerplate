@@ -29,8 +29,8 @@ src/
   app.ts                  única raíz de composición: crea y conecta los módulos
   modules/<modulo>/
     http/                 rutas, esquemas Zod y presenters
-    application/          casos de uso y puertos (interfaces de repositorio)
-    domain/               entidades y reglas (solo cuando el módulo ya las necesita)
+    application/          casos de uso y puertos (repositorios y lo que necesita de otros módulos)
+    domain/               tipos de las entidades; reglas solo cuando el módulo ya las necesita
     infra/                repositorios con Prisma
     index.ts              la única puerta pública del módulo
   platform/               infraestructura común: configuración, base de datos, servidor HTTP, logging
@@ -38,7 +38,8 @@ src/
 prisma/schema/            un archivo .prisma por módulo (+ base.prisma)
 tests/                    Vitest contra Postgres real (tests/domain/: reglas del dominio, sin base)
 docs/api.md               contrato de los endpoints (y docs/api/: colección de requests para probar a mano)
-CLAUDE.md                 instrucciones para el asistente de IA
+CONTEXT.md                vocabulario y reglas del dominio
+CLAUDE.md                 instrucciones para el asistente de IA (+ .claude/: reglas por capa, skills y agentes)
 ```
 
 ## Decisiones de arquitectura
@@ -51,10 +52,10 @@ El código se organiza por módulo, no por tipo de archivo (`routes/`, `services
 - **Los módulos nunca se importan entre sí, ni siquiera por el `index.ts`.** Si `lending` necesita algo de `catalog`, declara un puerto con tipos propios y `app.ts` lo conecta con la API pública de `catalog`. Así la dirección de la dependencia se ve en un solo lugar, no pueden existir ciclos y, para probar `lending`, basta con sustituir el puerto.
 - **`application` y `domain` no conocen el framework ni la base de datos:** no importan `http`, `infra`, `platform`, `fastify`, `zod`, Prisma ni `pg`. Es lo justo de "hexagonal" que hace falta, sin la ceremonia completa.
 - **ESLint lo hace cumplir y las propias reglas tienen tests** (`tests/architecture-rules.test.ts`). Una regla que solo vive en un documento termina rompiéndose.
-- **En `domain/`, datos inmutables y funciones; nunca clases.** `Loan` es un tipo `Readonly` con un _brand_ que no se exporta: solo nace de `borrow` (aplica las reglas) o de `rehydrateLoan` (reconstruye lo guardado y solo lo usa `infra`). Los instantes son `Temporal.Instant`, que es inmutable. Un dato sin reglas es un `type` (`Book`) y los estados con campos distintos se modelan con uniones discriminadas. Los datos planos cruzan sin mapeo las fronteras (Prisma, JSON, eventos) y los casos de uso, repositorios y rutas ya eran funciones: un solo estilo en todo el proyecto.
-- **Un módulo empieza simple** (casos de uso + repositorio) y gana `domain/` solo cuando aparece una regla de negocio real.
+- **En `domain/`, datos inmutables y funciones; nunca clases.** `Loan` es un tipo `Readonly` con un _brand_ que no se exporta: solo nace de `borrow` (aplica las reglas) o de `rehydrateLoan` (reconstruye lo guardado y solo lo usa `infra`). Los instantes son `Temporal.Instant`, que es inmutable. Un dato sin reglas es un `type` (`Book`) y los estados con campos distintos se modelan con uniones discriminadas. En los bordes solo se convierten valores (`Date` ↔ `Temporal.Instant` en `infra`, texto ISO en el presenter); nunca hay que reconstruir instancias. Los casos de uso, repositorios y rutas ya eran funciones: un solo estilo en todo el proyecto.
+- **Un módulo empieza simple:** casos de uso, repositorio y un `type` plano en `domain/` (`Book`). El _brand_ y las funciones con reglas llegan solo cuando aparece una regla de negocio real (`Loan`).
 
-Descartado: capas horizontales globales (mezclan los módulos y no dejan ninguna frontera) hexagonal puro en todo el proyecto (demasiada ceremonia para validar una idea) y entidades como clases (exigen un mapper en cada frontera, porque Prisma devuelve objetos planos, y mezclan dos estilos en el proyecto).
+Descartado: capas horizontales globales (mezclan los módulos y no dejan ninguna frontera), hexagonal puro en todo el proyecto (demasiada ceremonia para validar una idea) y entidades como clases (obligan a reconstruir instancias en cada frontera, porque Prisma y JSON trabajan con objetos planos, y mezclan dos estilos en el proyecto).
 
 ### 2. Inyección de dependencias con funciones, sin contenedor
 
@@ -135,7 +136,7 @@ Las variables de entorno se validan al arrancar y el proceso falla rápido si al
 
 ### Imagen de producción
 
-Se construye en dos etapas, corre con un usuario sin privilegios y solo lee variables de entorno, así que la misma imagen sirve en cualquier lugar. **Las migraciones son manuales:** no se ejecutan al construir ni al arrancar.
+Se construye en dos etapas, corre con un usuario sin privilegios y solo lee variables de entorno, así que la misma imagen sirve en cualquier lugar. **Las migraciones son manuales:** no se ejecutan al construir ni al arrancar. En local se aplican con `pnpm db:migrate`; fuera de desarrollo usa `prisma migrate deploy`, nunca `migrate dev` (puede pedir resetear la base).
 
 ```bash
 docker compose --profile app up --build -d    # API + Postgres, para probar la imagen en local

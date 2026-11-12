@@ -8,9 +8,8 @@ import { returnLoanUseCase } from "./application/useCases/returnLoan.js";
 import { loanRoutes } from "./http/routes.js";
 
 /*
- * Public surface, consumed only by the composition root (app.ts) and tests:
- * modules never import each other. Lending reaches catalog through
- * the `BookCatalog` port, adapted in app.ts.
+ * Public surface, used only by app.ts and tests (modules never import each other).
+ * Lending reaches catalog through the `BookCatalog` port, adapted in app.ts.
  */
 export type { BookAvailability, BookCatalog } from "./application/ports/bookCatalog.js";
 export { createPrismaLoanRepository } from "./infra/prismaLoanRepository.js";
@@ -20,7 +19,6 @@ export type LendingModule = {
   routes: FastifyPluginAsync;
 };
 
-/** Public entry point of the lending module. */
 export const createLendingModule = (deps: LendingDeps): LendingModule => {
   return {
     routes: loanRoutes({

@@ -8,7 +8,7 @@ export const errorHandler = (error: unknown, request: FastifyRequest, reply: Fas
 
   // A custom handler gets no automatic logging from Fastify.
   if (isResponseSerializationError(error)) {
-    // the handler broke its own response schema. Log only.
+    // A bug: the handler broke its own response schema. The client only sees a generic 500.
     request.log.error(
       { err: error, issues: error.cause.issues },
       "Response does not match its schema",

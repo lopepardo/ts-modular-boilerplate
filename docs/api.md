@@ -82,7 +82,7 @@ Responses: `200` loan with `"status": "returned"` (same shape as above) · `400`
 
 ### `GET /loans`
 
-Lists Loans, ordered by `borrowedAt`. Optional query filters, combinable: `memberId` (non-empty string) and `status` (`active` or `returned`). Every Loan has an `overdue` flag: `true` only for an `active` Loan whose `dueDate` has passed, computed on read from the clock (nothing is stored; `returned` Loans are never overdue). Not paginated: returns every matching row (see the note on listings in `CLAUDE.md`).
+Lists Loans, ordered by `borrowedAt`, then `id`. Optional query filters, combinable: `memberId` (trimmed, 1–200 characters) and `status` (`active` or `returned`). Every Loan has an `overdue` flag: `true` only for an `active` Loan whose `dueDate` has passed, computed on read from the clock (nothing is stored; `returned` Loans are never overdue). Not paginated yet: returns every matching row.
 
 Responses: `200` array of loans (same shape as `POST /loans`) · `400` `VALIDATION_ERROR` (invalid `status` or empty `memberId`).
 

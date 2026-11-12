@@ -12,7 +12,6 @@ type LoanRow = {
   dueDate: Date;
 };
 
-/** Only touches the `Loan` table owned by this module. */
 export const createPrismaLoanRepository = (prisma: PrismaClient): LoanRepository => {
   const toLoan = (row: LoanRow): Loan => {
     return rehydrateLoan({

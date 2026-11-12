@@ -3,7 +3,6 @@ import { Prisma, type PrismaClient } from "../../../platform/db/generated/client
 import type { BookRepository } from "../application/ports/bookRepository.js";
 import type { Book } from "../domain/book.js";
 
-/** Only touches the `Book` table owned by this module. */
 export const createPrismaBookRepository = (prisma: PrismaClient): BookRepository => {
   return {
     add: (book: Book) => {

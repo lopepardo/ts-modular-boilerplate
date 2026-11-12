@@ -5,17 +5,13 @@ export type LoanFilter = {
   status?: LoanStatus;
 };
 
-/** Declared by the application layer, implemented in `infra`. */
 export type LoanRepository = {
   findById: (id: string) => Promise<Loan | null>;
   /**
-   * Atomically, per Member: loads the Member's `active` Loans, builds the new Loan with `create`
-   * (the domain rules) and stores it; calls for the same Member are serialized. Throws
-   * `BOOK_ALREADY_LOANED` if the Book already has an active Loan.
-   *
-   * - `create` must return a Loan of `memberId`: only that Member is locked.
-   * - The only way to create a Loan: the per-Member rules hold only if every writer goes through
-   *   here (one active Loan per Book is enforced by a unique index instead).
+   * Atomically per Member (calls for the same Member are serialized): loads the Member's `active`
+   * Loans, builds the new Loan with `create` (the domain rules; it must return a Loan of
+   * `memberId`) and stores it. The per-Member rules hold only if every writer goes through here.
+   * Throws `BOOK_ALREADY_LOANED` if the Book already has an active Loan (unique index).
    */
   openLoan: (memberId: string, create: (memberActiveLoans: Loan[]) => Loan) => Promise<Loan>;
   search: (filter: LoanFilter) => Promise<Loan[]>;

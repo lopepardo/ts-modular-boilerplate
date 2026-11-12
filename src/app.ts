@@ -8,7 +8,6 @@ import { createCatalogModule, createPrismaBookRepository } from "./modules/catal
 import { createLendingModule, createPrismaLoanRepository } from "./modules/lending/index.js";
 
 export type AppDeps = {
-  /* Shared (cross-cutting) infrastructure: one property per port/client */
   config: ServerConfig;
   prisma: PrismaClient;
   /** Tests inject a deterministic id generator and clock; omitted, the real ones are used. */
@@ -22,7 +21,6 @@ export const buildApp = async (deps: AppDeps) => {
 
   const app = await createServer(config);
 
-  /* Modules */
   const catalog = createCatalogModule({
     generateId,
     repository: createPrismaBookRepository(prisma),
