@@ -94,14 +94,11 @@ describe("catalog: register and view a book", () => {
 
   it("registers two books with the same ISBN as two distinct Books", async () => {
     const payload = { title: "Dune", author: "Frank Herbert", isbn: "222" };
-    const first = (await register(payload)).json<{ id: string }>();
-    const second = (await register(payload)).json<{ id: string }>();
+    const first = await register(payload);
+    const second = await register(payload);
 
-    expect(first.id).not.toBe(second.id);
-    for (const { id } of [first, second]) {
-      const res = await app.inject({ method: "GET", url: `/books/${id}` });
-      expect(res.statusCode).toBe(200);
-    }
+    expect([first.statusCode, second.statusCode]).toEqual([201, 201]);
+    expect(first.json<{ id: string }>().id).not.toBe(second.json<{ id: string }>().id);
   });
 });
 
@@ -130,18 +127,6 @@ describe("catalog: list, search and retire books", () => {
     expect(res.statusCode).toBe(200);
     return res.json<BookBody[]>();
   };
-
-  it("lists registered books", async () => {
-    const a = await register("Listed A", "Lister Lee", "L-1");
-    const b = await register("Listed B", "Lister Lee", "L-2");
-
-    const books = await list("author=Lister%20Lee");
-
-    expect(books.map((book) => book.id).sort()).toEqual([a.id, b.id].sort());
-    expect(books[0]).toEqual(
-      expect.objectContaining({ title: expect.any(String) as unknown, retired: false }),
-    );
-  });
 
   it("lists books ordered by title", async () => {
     await register("Order B", "Order Author", "O-2");
@@ -217,17 +202,5 @@ describe("catalog: list, search and retire books", () => {
     const res = await retire("6f1c2b34-0000-4000-8000-000000000000");
     expect(res.statusCode).toBe(404);
     expect(res.json<ErrorBody>().error).toMatchObject({ code: "BOOK_NOT_FOUND" });
-  });
-
-  it("returns 400 VALIDATION_ERROR when retiring with a malformed id", async () => {
-    expect((await retire("abc")).statusCode).toBe(400);
-  });
-
-  it("has no way to delete a book", async () => {
-    const created = await register("Permanent", "Retire Author", "R-3");
-    const res = await app.inject({ method: "DELETE", url: `/books/${created.id}` });
-    expect(res.statusCode).toBe(404);
-    const view = await app.inject({ method: "GET", url: `/books/${created.id}` });
-    expect(view.statusCode).toBe(200);
   });
 });

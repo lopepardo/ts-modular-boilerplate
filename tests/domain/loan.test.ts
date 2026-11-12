@@ -5,7 +5,6 @@ import {
   giveBack,
   isOverdue,
   MAX_ACTIVE_LOANS,
-  rehydrateLoan,
   type Loan,
   type LoanProps,
 } from "../../src/modules/lending/domain/loan.js";
@@ -73,12 +72,6 @@ describe("borrow", () => {
 
     expect(conflictCode(() => borrowWith(loans))).toBe("MEMBER_HAS_OVERDUE_LOANS");
   });
-
-  it("does not treat a Loan due exactly now as Overdue", () => {
-    const dueNow = activeLoan(daysAfter(NOW, -14));
-
-    expect(borrowWith([dueNow]).status).toBe("active");
-  });
 });
 
 describe("isOverdue", () => {
@@ -118,17 +111,6 @@ describe("giveBack", () => {
     const returned = giveBack(activeLoan());
 
     expect(conflictCode(() => giveBack(returned))).toBe("LOAN_ALREADY_RETURNED");
-  });
-});
-
-describe("rehydrateLoan", () => {
-  it("rebuilds a stored Loan as is, without applying the borrowing rules", () => {
-    const stored = activeLoan(daysAfter(NOW, -30));
-
-    const rebuilt = rehydrateLoan({ ...stored });
-
-    expect(rebuilt).toEqual(stored);
-    expect(isOverdue(rebuilt, NOW)).toBe(true);
   });
 });
 

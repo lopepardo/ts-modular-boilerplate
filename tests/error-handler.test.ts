@@ -31,7 +31,7 @@ const Schema = z.object({
   tags: z.array(z.object({ label: z.string() })),
 });
 
-const app = Fastify({ bodyLimit: 64 });
+const app = Fastify();
 app.setValidatorCompiler(validatorCompiler);
 app.setSerializerCompiler(serializerCompiler);
 app.setErrorHandler(errorHandler);
