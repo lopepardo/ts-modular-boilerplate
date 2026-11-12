@@ -24,8 +24,9 @@ export const LOAN_PERIOD_DAYS = 14;
 export const MAX_ACTIVE_LOANS = 3;
 
 /** Overdue: an `active` Loan whose DueDate has passed. Derived, never stored. */
-export const isOverdue = (loan: Loan, now: Temporal.Instant): boolean =>
-  loan.status === "active" && Temporal.Instant.compare(now, loan.dueDate) > 0;
+export const isOverdue = (loan: Loan, now: Temporal.Instant): boolean => {
+  return loan.status === "active" && Temporal.Instant.compare(now, loan.dueDate) > 0;
+};
 
 /**
  * Starts an `active` Loan due `LOAN_PERIOD_DAYS` after `now`. Refuses a Member whose
@@ -47,6 +48,7 @@ export const borrow = (
       `Member ${input.memberId} already has ${MAX_ACTIVE_LOANS} active loans`,
     );
   }
+
   return {
     id: input.id,
     bookId: input.bookId,
@@ -57,9 +59,6 @@ export const borrow = (
   } as Loan;
 };
 
-/** Rebuilds a stored Loan without re-applying the rules. For `infra` only. */
-export const rehydrateLoan = (props: LoanProps): Loan => props as Loan;
-
 /** Only an `active` Loan can be returned; `returned` is final. */
 export const giveBack = (loan: Loan): Loan => {
   if (loan.status === "returned") {
@@ -67,3 +66,6 @@ export const giveBack = (loan: Loan): Loan => {
   }
   return { ...loan, status: "returned" };
 };
+
+/** Rebuilds a stored Loan without re-applying the rules. For `infra` only. */
+export const rehydrateLoan = (props: LoanProps): Loan => props as Loan;

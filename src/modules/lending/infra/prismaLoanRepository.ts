@@ -31,7 +31,9 @@ export const createPrismaLoanRepository = (prisma: PrismaClient): LoanRepository
           // Advisory locks are shared by the whole database: the first key namespaces this one.
           await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext('lending.member'), hashtext(${memberId}))`;
           const active = await tx.loan.findMany({ where: { memberId, status: "active" } });
-          const loan = create(active.map(toLoan));
+          const memberActiveLoans = active.map(toLoan);
+          const loan = create(memberActiveLoans);
+
           return tx.loan.create({
             data: {
               id: loan.id,
