@@ -5,7 +5,7 @@ RUN npm install -g corepack && corepack enable
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile
 COPY . .
-RUN pnpm build
+RUN pnpm db:generate && pnpm build
 RUN pnpm prune --prod
 
 

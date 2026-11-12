@@ -42,7 +42,7 @@ docker-compose.yml   local Postgres
 ### First time
 
 ```
-cp .env.example .env            # edit DB_PASSWORD (required by docker compose and prisma.config.ts)
+cp .env.example .env            # edit DB_PASSWORD (required by docker compose and by Prisma commands that connect)
 docker compose up -d postgres
 pnpm install
 pnpm db:generate                # mandatory: without it tsc/dev/lint fail

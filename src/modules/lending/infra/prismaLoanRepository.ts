@@ -28,7 +28,8 @@ export const createPrismaLoanRepository = (prisma: PrismaClient): LoanRepository
         const row = await prisma.$transaction(async (tx) => {
           // Serializes this Member's borrowings until the transaction ends. Relies on READ
           // COMMITTED (the default) so the read below sees the previous holder's commit.
-          await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${memberId}))`;
+          // Advisory locks are shared by the whole database: the first key namespaces this one.
+          await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext('lending.member'), hashtext(${memberId}))`;
           const active = await tx.loan.findMany({ where: { memberId, status: "active" } });
           const loan = create(active.map(toLoan));
           return tx.loan.create({

@@ -1,4 +1,4 @@
-import { readdirSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { ESLint } from "eslint";
 import tseslint from "typescript-eslint";
 import { describe, expect, it } from "vitest";
@@ -98,37 +98,61 @@ describe.skipIf(modules.length === 0)("module boundary rules", () => {
   });
 });
 
-// Table ownership: each module is the only reader/writer of its tables. The owner of
-// a model is the module whose prisma/schema/<module>.prisma declares it.
+// Table ownership: only the infra/ of the module whose prisma/schema/<module>.prisma declares a
+// model may use its delegate. Like the rules, the tests read the models from the schema files.
 const tableViolations = async (filePath: string, code: string) => {
   const [result] = await eslint.lintText(code, { filePath });
   return (result?.messages ?? []).filter((m) => m.ruleId === "no-restricted-syntax");
 };
 
-describe.skipIf(!modules.includes("catalog") || !modules.includes("lending"))(
-  "table ownership rules",
-  () => {
-    const read = "const books = await prisma.book.findMany();";
+const modelsOf = (name: string) => {
+  const file = `prisma/schema/${name}.prisma`;
+  const schema = existsSync(file) ? readFileSync(file, "utf8") : "";
+  return Array.from(schema.matchAll(/^model\s+(\w+)/gm), ([, model = ""]) => model);
+};
+const delegateOf = (model: string) => model.charAt(0).toLowerCase() + model.slice(1);
 
-    it.each([
-      ["src/app.ts", read],
-      ["src/platform/http/x.ts", read],
-      ["src/modules/catalog/application/x.ts", read],
-      ["src/modules/catalog/http/x.ts", read],
-      ["src/modules/lending/infra/x.ts", read],
-      ["src/modules/lending/infra/x.ts", "const books = await tx.book.findMany();"],
-      ["src/modules/lending/infra/x.ts", "await this.prisma.book.deleteMany();"],
-    ])("rejects %s -> %s", async (file, code) => {
-      expect(await tableViolations(file, code)).not.toHaveLength(0);
-    });
+const owner = modules.find((name) => modelsOf(name).length > 0);
+const table = delegateOf((owner && modelsOf(owner)[0]) ?? "none");
+const stranger = modules.find((name) => name !== owner);
 
+describe.skipIf(owner === undefined)("table ownership rules", () => {
+  const read = `const rows = await prisma.${table}.findMany();`;
+  const ownerAt = (layer: string) => `src/modules/${owner}/${layer}/x.ts`;
+
+  it.each([
+    ["src/app.ts", read],
+    ["src/platform/http/x.ts", read],
+    [ownerAt("application"), read],
+    [ownerAt("domain"), read],
+    [ownerAt("http"), read],
+  ])("rejects %s -> %s", async (file, code) => {
+    expect(await tableViolations(file, code)).not.toHaveLength(0);
+  });
+
+  it.each([
+    [ownerAt("infra"), read],
+    [ownerAt("infra"), `const rows = await tx.${table}.findMany();`],
+    ["src/app.ts", `const rows = deps.${table};`],
+  ])("allows %s -> %s", async (file, code) => {
+    expect(await tableViolations(file, code)).toHaveLength(0);
+  });
+
+  it.each(modules.flatMap((name) => modelsOf(name).map((model) => [name, delegateOf(model)])))(
+    "lets %s/infra use its own %s",
+    async (name, delegate) => {
+      const code = `const rows = await prisma.${delegate}.findMany();`;
+      expect(await tableViolations(`src/modules/${name}/infra/x.ts`, code)).toHaveLength(0);
+    },
+  );
+
+  describe.skipIf(stranger === undefined)("from another module", () => {
     it.each([
-      ["src/modules/catalog/infra/x.ts", read],
-      ["src/modules/catalog/infra/x.ts", "const books = await tx.book.findMany();"],
-      ["src/modules/lending/infra/x.ts", "const loans = await prisma.loan.findMany();"],
-      ["src/app.ts", "const book = deps.book;"],
-    ])("allows %s -> %s", async (file, code) => {
-      expect(await tableViolations(file, code)).toHaveLength(0);
+      read,
+      `const rows = await tx.${table}.findMany();`,
+      `await this.prisma.${table}.deleteMany();`,
+    ])("rejects its infra -> %s", async (code) => {
+      expect(await tableViolations(`src/modules/${stranger}/infra/x.ts`, code)).not.toHaveLength(0);
     });
-  },
-);
+  });
+});

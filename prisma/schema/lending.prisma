@@ -12,8 +12,8 @@ model Loan {
   /// Opaque external id; the library does not register Members.
   memberId   String
   status     LoanStatus
-  borrowedAt DateTime
-  dueDate    DateTime
+  borrowedAt DateTime   @db.Timestamptz(3)
+  dueDate    DateTime   @db.Timestamptz(3)
 
   @@index([bookId])
   @@index([memberId])

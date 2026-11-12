@@ -136,7 +136,7 @@ Las variables de entorno se validan al arrancar y el proceso falla rápido si al
 
 ### Imagen de producción
 
-Se construye en dos etapas, corre con un usuario sin privilegios y solo lee variables de entorno, así que la misma imagen sirve en cualquier lugar. **Las migraciones son manuales:** no se ejecutan al construir ni al arrancar. En local se aplican con `pnpm db:migrate`; fuera de desarrollo usa `prisma migrate deploy`, nunca `migrate dev` (puede pedir resetear la base).
+Se construye en dos etapas (el cliente de Prisma se genera dentro de la imagen, sin credenciales), corre con un usuario sin privilegios y solo lee variables de entorno, así que la misma imagen sirve en cualquier lugar. **Las migraciones son manuales:** no se ejecutan al construir ni al arrancar. En local se aplican con `pnpm db:migrate`; fuera de desarrollo usa `prisma migrate deploy`, nunca `migrate dev` (puede pedir resetear la base).
 
 ```bash
 docker compose --profile app up --build -d    # API + Postgres, para probar la imagen en local
