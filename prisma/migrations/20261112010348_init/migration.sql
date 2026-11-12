@@ -24,8 +24,8 @@ CREATE TABLE "lending"."Loan" (
     "bookId" TEXT NOT NULL,
     "memberId" TEXT NOT NULL,
     "status" "lending"."LoanStatus" NOT NULL,
-    "borrowedAt" TIMESTAMP(3) NOT NULL,
-    "dueDate" TIMESTAMP(3) NOT NULL,
+    "borrowedAt" TIMESTAMPTZ(3) NOT NULL,
+    "dueDate" TIMESTAMPTZ(3) NOT NULL,
 
     CONSTRAINT "Loan_pkey" PRIMARY KEY ("id")
 );
